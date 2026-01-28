@@ -1,5 +1,18 @@
 # Change Log
 
+## 4.3.28
+
+### Patch Changes
+
+- @smithy/smithy-client@4.11.1
+
+## 4.3.27
+
+### Patch Changes
+
+- Updated dependencies [75145e5]
+  - @smithy/smithy-client@4.11.0
+
 ## 4.3.26
 
 ### Patch Changes
