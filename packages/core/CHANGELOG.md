@@ -1,10 +1,16 @@
 # Change Log
 
+## 3.23.2
+
+### Patch Changes
+
+- c5db01c: fix for Unit event stream union targets
+
 ## 3.23.1
 
 ### Patch Changes
 
-- 3c18df8: omit absent resposne fields instead of assigning undefined
+- 6f96c01: omit absent resposne fields instead of assigning undefined
 
 ## 3.23.0
 
