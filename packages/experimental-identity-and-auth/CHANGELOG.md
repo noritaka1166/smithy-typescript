@@ -1,5 +1,26 @@
 # Change Log
 
+## 0.5.35
+
+### Patch Changes
+
+- 03c3dc8: update for rollup build externalLiveBindings=false
+- Updated dependencies [03c3dc8]
+  - @smithy/middleware-endpoint@4.4.18
+  - @smithy/middleware-retry@4.4.35
+  - @smithy/middleware-serde@4.2.10
+  - @smithy/protocol-http@5.3.9
+  - @smithy/signature-v4@5.3.9
+  - @smithy/types@4.12.1
+  - @smithy/util-middleware@4.2.9
+
+## 0.5.34
+
+### Patch Changes
+
+- @smithy/middleware-endpoint@4.4.17
+- @smithy/middleware-retry@4.4.34
+
 ## 0.5.33
 
 ### Patch Changes

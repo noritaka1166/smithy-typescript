@@ -1,5 +1,31 @@
 # Change Log
 
+## 1.0.4
+
+### Patch Changes
+
+- 832fa25: omit exec env from user agent
+
+## 1.0.3
+
+### Patch Changes
+
+- 03c3dc8: update for rollup build externalLiveBindings=false
+- Updated dependencies [03c3dc8]
+  - @smithy/core@3.23.4
+  - @smithy/eventstream-codec@4.2.9
+  - @smithy/protocol-http@5.3.9
+  - @smithy/types@4.12.1
+  - @smithy/util-base64@4.3.1
+  - @smithy/util-hex-encoding@4.2.1
+  - @smithy/util-utf8@4.2.1
+
+## 1.0.2
+
+### Patch Changes
+
+- @smithy/core@3.23.3
+
 ## 1.0.1
 
 ### Patch Changes
