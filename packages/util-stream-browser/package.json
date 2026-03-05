@@ -1,6 +1,6 @@
 {
   "name": "@smithy/util-stream-browser",
-  "version": "3.2.12",
+  "version": "3.2.13",
   "scripts": {
     "build": "concurrently 'yarn:build:es' 'yarn:build:types'",
     "build:es": "yarn g:tsc -p tsconfig.es.json",
@@ -36,7 +36,7 @@
     "typedoc": "0.23.23"
   },
   "typesVersions": {
-    "<4.0": {
+    "<4.5": {
       "dist-types/*": [
         "dist-types/ts3.4/*"
       ]

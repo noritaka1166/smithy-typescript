@@ -1,6 +1,6 @@
 {
   "name": "@smithy/util-utf8",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "A UTF-8 string <-> UInt8Array converter",
   "main": "./dist-cjs/index.js",
   "module": "./dist-es/index.js",
@@ -38,7 +38,7 @@
     "node": ">=18.0.0"
   },
   "typesVersions": {
-    "<4.0": {
+    "<4.5": {
       "dist-types/*": [
         "dist-types/ts3.4/*"
       ]

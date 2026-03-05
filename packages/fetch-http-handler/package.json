@@ -1,6 +1,6 @@
 {
   "name": "@smithy/fetch-http-handler",
-  "version": "5.3.12",
+  "version": "5.3.13",
   "description": "Provides a way to make requests",
   "scripts": {
     "build": "concurrently 'yarn:build:cjs' 'yarn:build:es' 'yarn:build:types && yarn build:types:downlevel'",
@@ -42,7 +42,7 @@
     "typedoc": "0.23.23"
   },
   "typesVersions": {
-    "<4.0": {
+    "<4.5": {
       "dist-types/*": [
         "dist-types/ts3.4/*"
       ]
