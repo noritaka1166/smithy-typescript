@@ -1,5 +1,22 @@
 # Change Log
 
+## 5.3.15
+
+### Patch Changes
+
+- dab22f1: fix: do not return caller's Error directly from buildAbortError
+
+  Always create a new mutable Error when the abort reason is an Error, preserving the original via `.cause`. Fixes TypeError when retry middleware tries to set `$metadata` on a frozen/sealed abort reason.
+
+## 5.3.14
+
+### Patch Changes
+
+- Updated dependencies [5340b11]
+  - @smithy/types@4.13.1
+  - @smithy/protocol-http@5.3.12
+  - @smithy/querystring-builder@4.2.12
+
 ## 5.3.13
 
 ### Patch Changes

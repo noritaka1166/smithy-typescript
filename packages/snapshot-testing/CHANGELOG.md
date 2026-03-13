@@ -1,5 +1,25 @@
 # Change Log
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [dab22f1]
+- Updated dependencies [2edd638]
+  - @smithy/node-http-handler@4.4.16
+  - @smithy/core@3.23.11
+
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies [5340b11]
+  - @smithy/core@3.23.10
+  - @smithy/types@4.13.1
+  - @smithy/eventstream-codec@4.2.12
+  - @smithy/node-http-handler@4.4.15
+  - @smithy/protocol-http@5.3.12
+
 ## 2.0.0
 
 ### Major Changes

@@ -39,6 +39,14 @@ export interface CamelCaseOperationOutput {
 /**
  * @public
  */
+export interface DifferentShapeName {
+  name?: string | undefined;
+  number?: number | undefined;
+}
+
+/**
+ * @public
+ */
 export interface GetNumbersRequest {
   bigDecimal?: NumericValue | undefined;
   bigInteger?: bigint | undefined;
@@ -60,6 +68,7 @@ export interface GetNumbersRequest {
 
   startToken?: string | undefined;
   maxResults?: number | undefined;
+  customHeaderInput?: string | undefined;
 }
 
 /**
@@ -110,6 +119,7 @@ export interface Unit {}
 export type TradeEvents =
   | TradeEvents.AlphaMember
   | TradeEvents.BetaMember
+  | TradeEvents.DeltaMember
   | TradeEvents.GammaMember
   | TradeEvents.$UnknownMember;
 
@@ -121,6 +131,7 @@ export namespace TradeEvents {
     alpha: Alpha;
     beta?: never;
     gamma?: never;
+    delta?: never;
     $unknown?: never;
   }
 
@@ -128,6 +139,7 @@ export namespace TradeEvents {
     alpha?: never;
     beta: Unit;
     gamma?: never;
+    delta?: never;
     $unknown?: never;
   }
 
@@ -135,6 +147,15 @@ export namespace TradeEvents {
     alpha?: never;
     beta?: never;
     gamma: Unit;
+    delta?: never;
+    $unknown?: never;
+  }
+
+  export interface DeltaMember {
+    alpha?: never;
+    beta?: never;
+    gamma?: never;
+    delta: DifferentShapeName;
     $unknown?: never;
   }
 
@@ -145,6 +166,7 @@ export namespace TradeEvents {
     alpha?: never;
     beta?: never;
     gamma?: never;
+    delta?: never;
     $unknown: [string, any];
   }
 
@@ -156,6 +178,7 @@ export namespace TradeEvents {
     alpha: (value: Alpha) => T;
     beta: (value: Unit) => T;
     gamma: (value: Unit) => T;
+    delta: (value: DifferentShapeName) => T;
     _: (name: string, value: any) => T;
   }
 }
