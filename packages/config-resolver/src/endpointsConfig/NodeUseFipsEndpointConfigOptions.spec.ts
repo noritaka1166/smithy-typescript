@@ -6,6 +6,7 @@ import {
   DEFAULT_USE_FIPS_ENDPOINT,
   ENV_USE_FIPS_ENDPOINT,
   NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS,
+  nodeFipsConfigSelectors,
 } from "./NodeUseFipsEndpointConfigOptions";
 
 vi.mock("@smithy/util-config-provider");
@@ -47,6 +48,11 @@ describe("NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS", () => {
 
   it("returns false for default", () => {
     const { default: defaultValue } = NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS;
-    expect(defaultValue).toEqual(DEFAULT_USE_FIPS_ENDPOINT);
+    expect(defaultValue).toBe(false);
+  });
+
+  it("returns undefined for default when using nodeFipsConfigSelectors", () => {
+    const { default: defaultValue } = nodeFipsConfigSelectors;
+    expect(defaultValue).toBeUndefined();
   });
 });

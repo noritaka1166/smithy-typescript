@@ -6,6 +6,7 @@ import {
   DEFAULT_USE_DUALSTACK_ENDPOINT,
   ENV_USE_DUALSTACK_ENDPOINT,
   NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS,
+  nodeDualstackConfigSelectors,
 } from "./NodeUseDualstackEndpointConfigOptions";
 
 vi.mock("@smithy/util-config-provider");
@@ -45,8 +46,13 @@ describe("NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS", () => {
     test(configFileSelector, profileContent, CONFIG_USE_DUALSTACK_ENDPOINT, SelectorType.CONFIG);
   });
 
-  it("returns false for default", () => {
+  it("returns undefined for default", () => {
     const { default: defaultValue } = NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS;
     expect(defaultValue).toEqual(DEFAULT_USE_DUALSTACK_ENDPOINT);
+  });
+
+  it("returns undefined for default when using nodeFipsConfigSelectors", () => {
+    const { default: defaultValue } = nodeDualstackConfigSelectors;
+    expect(defaultValue).toBeUndefined();
   });
 });

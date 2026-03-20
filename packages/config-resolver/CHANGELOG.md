@@ -1,5 +1,18 @@
 # Change Log
 
+## 4.4.13
+
+### Patch Changes
+
+- b1f0dba: fix(middleware-endpoint): update type of useDualStackEndpoint/useFipsEndpoint input config
+  fix(config-resolver): add alternate values for NODE_USE_DUALSTACK_ENDPOINT_CONFIG_OPTIONS and NODE_USE_FIPS_ENDPOINT_CONFIG_OPTIONS
+
+## 4.4.12
+
+### Patch Changes
+
+- 4b5602d: fix: update default value to undefined for dualstack/fips config
+
 ## 4.4.11
 
 ### Patch Changes
