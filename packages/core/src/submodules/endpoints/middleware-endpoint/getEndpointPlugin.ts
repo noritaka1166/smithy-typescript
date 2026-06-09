@@ -1,0 +1,50 @@
+import type { EndpointParameters, Pluggable, RelativeMiddlewareOptions, SerializeHandlerOptions } from "@smithy/types";
+
+import type { GetEndpointFromConfig } from "./adaptors/getEndpointFromInstructions";
+import { bindEndpointMiddleware } from "./endpointMiddleware";
+import type { EndpointResolvedConfig } from "./resolveEndpointConfig";
+import type { EndpointParameterInstructions } from "./types";
+
+/**
+ * Inlined from @smithy/core/serde to avoid cross-submodule CJS resolution issue.
+ */
+const serializerMiddlewareOption: SerializeHandlerOptions = {
+  name: "serializerMiddleware",
+  step: "serialize",
+  tags: ["SERIALIZER"],
+  override: true,
+};
+
+/**
+ * @internal
+ */
+export const endpointMiddlewareOptions: SerializeHandlerOptions & RelativeMiddlewareOptions = {
+  step: "serialize",
+  tags: ["ENDPOINT_PARAMETERS", "ENDPOINT_V2", "ENDPOINT"],
+  name: "endpointV2Middleware",
+  override: true,
+  relation: "before",
+  toMiddleware: serializerMiddlewareOption.name!,
+};
+
+/**
+ * @internal
+ */
+export function bindGetEndpointPlugin(getEndpointFromConfig: GetEndpointFromConfig) {
+  const endpointMiddleware = bindEndpointMiddleware(getEndpointFromConfig);
+
+  return <T extends EndpointParameters>(
+    config: EndpointResolvedConfig<T>,
+    instructions: EndpointParameterInstructions
+  ): Pluggable<any, any> => ({
+    applyToStack: (clientStack) => {
+      clientStack.addRelativeTo(
+        endpointMiddleware<T>({
+          config,
+          instructions,
+        }),
+        endpointMiddlewareOptions
+      );
+    },
+  });
+}

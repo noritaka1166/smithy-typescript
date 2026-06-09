@@ -13,6 +13,7 @@ import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.typescript.codegen.CodegenUtils;
 import software.amazon.smithy.typescript.codegen.LanguageTarget;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.TypeScriptSettings;
 import software.amazon.smithy.typescript.codegen.TypeScriptWriter;
@@ -95,21 +96,36 @@ public final class AddClientRuntimeConfig implements TypeScriptIntegration {
         switch (target) {
             case SHARED:
                 return MapUtils.of("logger", writer -> {
-                    writer.addImport("NoOpLogger", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                    writer.addImportSubmodule(
+                        "NoOpLogger",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CLIENT
+                    );
                     writer.write("new NoOpLogger()");
                 });
             case BROWSER:
                 return MapUtils.of(
                     "maxAttempts",
                     writer -> {
-                        writer.addDependency(TypeScriptDependency.UTIL_RETRY);
-                        writer.addImport("DEFAULT_MAX_ATTEMPTS", null, TypeScriptDependency.UTIL_RETRY);
+                        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                        writer.addImportSubmodule(
+                            "DEFAULT_MAX_ATTEMPTS",
+                            null,
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.RETRY
+                        );
                         writer.write("DEFAULT_MAX_ATTEMPTS");
                     },
                     "retryMode",
                     writer -> {
-                        writer.addDependency(TypeScriptDependency.UTIL_RETRY);
-                        writer.addImport("DEFAULT_RETRY_MODE", null, TypeScriptDependency.UTIL_RETRY);
+                        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                        writer.addImportSubmodule(
+                            "DEFAULT_RETRY_MODE",
+                            null,
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.RETRY
+                        );
                         writer.write(
                             "(async () => (await defaultConfigProvider()).retryMode || DEFAULT_RETRY_MODE)"
                         );
@@ -119,26 +135,43 @@ public final class AddClientRuntimeConfig implements TypeScriptIntegration {
                 return MapUtils.of(
                     "maxAttempts",
                     writer -> {
-                        writer.addDependency(TypeScriptDependency.NODE_CONFIG_PROVIDER);
-                        writer.addImport("loadConfig", "loadNodeConfig", TypeScriptDependency.NODE_CONFIG_PROVIDER);
-                        writer.addImport(
+                        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                        writer.addImportSubmodule(
+                            "loadConfig",
+                            "loadNodeConfig",
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.CONFIG
+                        );
+                        writer.addImportSubmodule(
                             "NODE_MAX_ATTEMPT_CONFIG_OPTIONS",
                             null,
-                            TypeScriptDependency.MIDDLEWARE_RETRY
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.RETRY
                         );
                         writer.write("loadNodeConfig(NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config)");
                     },
                     "retryMode",
                     writer -> {
-                        writer.addDependency(TypeScriptDependency.NODE_CONFIG_PROVIDER);
-                        writer.addImport("loadConfig", "loadNodeConfig", TypeScriptDependency.NODE_CONFIG_PROVIDER);
-                        writer.addDependency(TypeScriptDependency.MIDDLEWARE_RETRY);
-                        writer.addImport(
+                        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                        writer.addImportSubmodule(
+                            "loadConfig",
+                            "loadNodeConfig",
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.CONFIG
+                        );
+                        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                        writer.addImportSubmodule(
                             "NODE_RETRY_MODE_CONFIG_OPTIONS",
                             null,
-                            TypeScriptDependency.MIDDLEWARE_RETRY
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.RETRY
                         );
-                        writer.addImport("DEFAULT_RETRY_MODE", null, TypeScriptDependency.UTIL_RETRY);
+                        writer.addImportSubmodule(
+                            "DEFAULT_RETRY_MODE",
+                            null,
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.RETRY
+                        );
                         writer.indent();
                         writer.writeInline(
                             """

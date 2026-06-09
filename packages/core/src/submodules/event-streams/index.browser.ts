@@ -1,0 +1,51 @@
+// @smithy/eventstream-codec
+export { EventStreamCodec } from "./eventstream-codec/EventStreamCodec";
+export { HeaderMarshaller } from "./eventstream-codec/HeaderMarshaller";
+export { Int64 } from "./eventstream-codec/Int64";
+export type {
+  Message,
+  MessageHeaders,
+  MessageHeaderValue,
+  BooleanHeaderValue,
+  ByteHeaderValue,
+  ShortHeaderValue,
+  IntegerHeaderValue,
+  LongHeaderValue,
+  BinaryHeaderValue,
+  StringHeaderValue,
+  TimestampHeaderValue,
+  UuidHeaderValue,
+} from "./eventstream-codec/Message";
+export { MessageDecoderStream } from "./eventstream-codec/MessageDecoderStream";
+export type { MessageDecoderStreamOptions } from "./eventstream-codec/MessageDecoderStream";
+export { MessageEncoderStream } from "./eventstream-codec/MessageEncoderStream";
+export type { MessageEncoderStreamOptions } from "./eventstream-codec/MessageEncoderStream";
+export { SmithyMessageDecoderStream } from "./eventstream-codec/SmithyMessageDecoderStream";
+export type { SmithyMessageDecoderStreamOptions } from "./eventstream-codec/SmithyMessageDecoderStream";
+export { SmithyMessageEncoderStream } from "./eventstream-codec/SmithyMessageEncoderStream";
+export type { SmithyMessageEncoderStreamOptions } from "./eventstream-codec/SmithyMessageEncoderStream";
+
+// @smithy/eventstream-serde-browser
+export { EventStreamMarshaller, eventStreamSerdeProvider } from "./eventstream-serde/EventStreamMarshaller.browser";
+export type { EventStreamMarshallerOptions } from "./eventstream-serde/EventStreamMarshaller.browser";
+export { readableStreamToIterable, iterableToReadableStream } from "./eventstream-serde/utils";
+
+// @smithy/eventstream-serde-universal
+export {
+  EventStreamMarshaller as UniversalEventStreamMarshaller,
+  eventStreamSerdeProvider as universalEventStreamSerdeProvider,
+} from "./eventstream-serde-universal/EventStreamMarshaller";
+export type { EventStreamMarshallerOptions as UniversalEventStreamMarshallerOptions } from "./eventstream-serde-universal/EventStreamMarshaller";
+export { getChunkedStream } from "./eventstream-serde-universal/getChunkedStream";
+export { getUnmarshalledStream, getMessageUnmarshaller } from "./eventstream-serde-universal/getUnmarshalledStream";
+export type { UnmarshalledStreamOptions } from "./eventstream-serde-universal/getUnmarshalledStream";
+
+// @smithy/eventstream-serde-config-resolver
+export { resolveEventStreamSerdeConfig } from "./eventstream-serde-config-resolver/EventStreamSerdeConfig";
+export type {
+  EventStreamSerdeInputConfig,
+  EventStreamSerdeResolvedConfig,
+} from "./eventstream-serde-config-resolver/EventStreamSerdeConfig";
+
+// EventStreamSerde
+export { EventStreamSerde } from "./EventStreamSerde";

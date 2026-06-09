@@ -4,6 +4,7 @@
  */
 package software.amazon.smithy.typescript.codegen;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.TreeSet;
@@ -16,6 +17,8 @@ import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.knowledge.TopDownIndex;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.ShapeId;
+import software.amazon.smithy.typescript.codegen.knowledge.ServiceClosure;
 import software.amazon.smithy.utils.SmithyInternalApi;
 import software.amazon.smithy.waiters.Acceptor;
 import software.amazon.smithy.waiters.AcceptorState;
@@ -28,7 +31,7 @@ import software.amazon.smithy.waiters.Waiter;
 class WaiterGenerator implements Runnable {
 
     static final String WAITERS_FOLDER = "waiters";
-    static final TypeScriptDependency WAITABLE_UTIL_PACKAGE = TypeScriptDependency.AWS_SDK_UTIL_WAITERS;
+    static final String WAITER_SUBMODULE = SmithyCoreSubmodules.CLIENT;
 
     private final String waiterName;
     private final Waiter waiter;
@@ -37,6 +40,9 @@ class WaiterGenerator implements Runnable {
     private final Symbol serviceSymbol;
     private final Symbol operationSymbol;
     private final Symbol inputSymbol;
+    private final Symbol outputSymbol;
+    private final String waiterResultType;
+    private final String waitUntilResultType;
 
     WaiterGenerator(
         String waiterName,
@@ -44,20 +50,44 @@ class WaiterGenerator implements Runnable {
         ServiceShape service,
         OperationShape operation,
         TypeScriptWriter writer,
-        SymbolProvider symbolProvider
+        SymbolProvider symbolProvider,
+        TypeScriptSettings settings,
+        Model model
     ) {
         this.waiterName = waiterName;
         this.waiter = waiter;
         this.writer = writer;
 
         this.operationSymbol = symbolProvider.toSymbol(operation);
-        this.serviceSymbol = symbolProvider.toSymbol(service);
+        this.serviceSymbol = symbolProvider.toSymbol(service)
+            .toBuilder()
+            .putProperty("typeOnly", true)
+            .build();
         this.inputSymbol = operationSymbol.expectProperty("inputType", Symbol.class);
+        this.outputSymbol = operationSymbol.expectProperty("outputType", Symbol.class);
+
+        String serviceName = CodegenUtils.getServiceName(settings, model, symbolProvider);
+        String syntheticBaseExceptionName = CodegenUtils.getSyntheticBaseExceptionName(serviceName, model);
+        writer.addRelativeTypeImport(
+            syntheticBaseExceptionName,
+            null,
+            Path.of(".", "src", "models", syntheticBaseExceptionName)
+        );
+        waiterResultType = outputSymbol.getName() + " | " + syntheticBaseExceptionName;
+        waitUntilResultType = computeWaitUntilResultType(
+            waiter,
+            outputSymbol.getName(),
+            syntheticBaseExceptionName,
+            settings,
+            model,
+            symbolProvider,
+            writer
+        );
     }
 
     @Override
     public void run() {
-        writer.addDependency(TypeScriptDependency.AWS_SDK_UTIL_WAITERS);
+        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
         this.generateAcceptors();
         this.generateWaiter();
     }
@@ -67,11 +97,11 @@ class WaiterGenerator implements Runnable {
     }
 
     private void generateWaiter() {
-        writer.addImport("createWaiter", null, WAITABLE_UTIL_PACKAGE);
-        writer.addImport("WaiterResult", null, WAITABLE_UTIL_PACKAGE);
-        writer.addImport("WaiterState", null, WAITABLE_UTIL_PACKAGE);
-        writer.addImport("checkExceptions", null, WAITABLE_UTIL_PACKAGE);
-        writer.addImport("WaiterConfiguration", null, WAITABLE_UTIL_PACKAGE);
+        writer.addImportSubmodule("createWaiter", null, TypeScriptDependency.SMITHY_CORE, WAITER_SUBMODULE);
+        writer.addTypeImportSubmodule("WaiterResult", null, TypeScriptDependency.SMITHY_CORE, WAITER_SUBMODULE);
+        writer.addImportSubmodule("WaiterState", null, TypeScriptDependency.SMITHY_CORE, WAITER_SUBMODULE);
+        writer.addImportSubmodule("checkExceptions", null, TypeScriptDependency.SMITHY_CORE, WAITER_SUBMODULE);
+        writer.addTypeImportSubmodule("WaiterConfiguration", null, TypeScriptDependency.SMITHY_CORE, WAITER_SUBMODULE);
 
         // generates (deprecated) WaitFor....
         writer.writeDocs(
@@ -89,11 +119,12 @@ class WaiterGenerator implements Runnable {
             export const waitFor$L = async (
               params: WaiterConfiguration<$T>,
               input: $T
-            ): Promise<WaiterResult> => {""",
+            ): Promise<WaiterResult<$L>> => {""",
             "};",
             waiterName,
             serviceSymbol,
             inputSymbol,
+            waiterResultType,
             () -> {
                 writer.write(
                     "const serviceDefaults = { minDelay: $L, maxDelay: $L };",
@@ -118,11 +149,12 @@ class WaiterGenerator implements Runnable {
             export const waitUntil$L = async (
               params: WaiterConfiguration<$T>,
               input: $T
-            ): Promise<WaiterResult> => {""",
+            ): Promise<WaiterResult<$L>> => {""",
             "};",
             waiterName,
             serviceSymbol,
             inputSymbol,
+            waitUntilResultType,
             () -> {
                 writer.write(
                     "const serviceDefaults = { minDelay: $L, maxDelay: $L };",
@@ -132,23 +164,30 @@ class WaiterGenerator implements Runnable {
                 writer.write(
                     "const result = await createWaiter({ ...serviceDefaults, ...params }, input, checkState);"
                 );
-                writer.write("return checkExceptions(result);");
+                // as WaiterResult<Narrowed> is needed because createWaiter is the union type
+                // whereas checkExceptions narrows to only the success type.
+                writer.write("return checkExceptions(result) as WaiterResult<$L>;", waitUntilResultType);
             }
         );
     }
 
     private void generateAcceptors() {
         writer.openBlock(
-            "const checkState = async (client: $T, input: $T): Promise<WaiterResult> => {",
+            "const checkState = async (client: $T, input: $T): Promise<WaiterResult<$L>> => {",
             "};",
             serviceSymbol,
             inputSymbol,
+            waiterResultType,
             () -> {
                 writer.write("let reason;");
 
                 writer.write("try {").indent();
                 {
-                    writer.write("let result: any = await client.send(new $T(input));", operationSymbol);
+                    writer.write(
+                        "let result: $T & any = await client.send(new $T(input));",
+                        outputSymbol,
+                        operationSymbol
+                    );
                     writer.write("reason = result;");
                     writeAcceptors("result", false);
                 }
@@ -205,7 +244,7 @@ class WaiterGenerator implements Runnable {
     }
 
     private void generateErrorMatcher(String accessor, Matcher.ErrorTypeMember member, AcceptorState state) {
-        writer.openBlock("if ($L.name && $L.name == $S) {", "}", accessor, accessor, member.getValue(), () -> {
+        writer.openBlock("if ($L.name === $S) {", "}", accessor, member.getValue(), () -> {
             writer.write("return $L;", makeWaiterResult(state));
         });
     }
@@ -249,6 +288,85 @@ class WaiterGenerator implements Runnable {
 
     private static String getModulePath(String fileLocation) {
         return fileLocation.substring(fileLocation.lastIndexOf("/") + 1, fileLocation.length()).replace(".ts", "");
+    }
+
+    /**
+     * Determines the narrowest result type for waitUntil based on which acceptors
+     * produce a SUCCESS state.
+     *
+     * - If success only comes from successful responses: OutputType only.
+     * - If success only comes from errors: the specific modeled exception if there
+     *   is exactly one ErrorType success acceptor matching a modeled error, otherwise
+     *   the synthetic base exception.
+     * - If success can come from both: OutputType | exception type.
+     */
+    static String computeWaitUntilResultType(
+        Waiter waiter,
+        String outputTypeName,
+        String exceptionTypeName,
+        TypeScriptSettings settings,
+        Model model,
+        SymbolProvider symbolProvider,
+        TypeScriptWriter writer
+    ) {
+        boolean waiterSuccessTerminalOnSuccessfulResponse = false;
+        boolean waiterSuccessTerminalOnErrorResponse = false;
+        Set<String> successErrorTypeNames = new TreeSet<>();
+
+        for (Acceptor acceptor : waiter.getAcceptors()) {
+            if (acceptor.getState() != AcceptorState.SUCCESS) {
+                continue;
+            }
+            Matcher<?> matcher = acceptor.getMatcher();
+            if (matcher instanceof Matcher.SuccessMember successMember) {
+                if (successMember.getValue()) {
+                    waiterSuccessTerminalOnSuccessfulResponse = true;
+                } else {
+                    waiterSuccessTerminalOnErrorResponse = true;
+                }
+            } else if (matcher instanceof Matcher.ErrorTypeMember errorTypeMember) {
+                waiterSuccessTerminalOnErrorResponse = true;
+                successErrorTypeNames.add(errorTypeMember.getValue());
+            } else if (
+                matcher instanceof Matcher.OutputMember
+                    || matcher instanceof Matcher.InputOutputMember
+            ) {
+                waiterSuccessTerminalOnSuccessfulResponse = true;
+            }
+        }
+
+        String resolvedExceptionType = exceptionTypeName;
+        if (successErrorTypeNames.size() == 1) {
+            String errorName = successErrorTypeNames.iterator().next();
+            boolean errorTypeQualifiedName = errorName.contains("#");
+
+            // Check if this error is a modeled error shape on the operation.
+            resolvedExceptionType = ServiceClosure.of(model, settings.getService(model))
+                .getErrorShapes()
+                .stream()
+                .filter(
+                    shape -> errorTypeQualifiedName ? ShapeId.from(errorName).equals(shape.getId())
+                        : shape.getId().getName().equals(errorName)
+                )
+                .findFirst()
+                .map(shape -> {
+                    String typeName = symbolProvider.toSymbol(shape).getName();
+                    writer.addRelativeTypeImport(
+                        typeName,
+                        null,
+                        Path.of(".", "src", "models", "errors")
+                    );
+                    return typeName;
+                })
+                .orElse(exceptionTypeName);
+        }
+
+        if (waiterSuccessTerminalOnSuccessfulResponse && waiterSuccessTerminalOnErrorResponse) {
+            return outputTypeName + " | " + resolvedExceptionType;
+        } else if (waiterSuccessTerminalOnErrorResponse) {
+            return resolvedExceptionType;
+        }
+        return outputTypeName;
     }
 
     static void writeIndex(Model model, ServiceShape service, FileManifest fileManifest) {

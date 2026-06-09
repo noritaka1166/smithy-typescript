@@ -1,5 +1,108 @@
 # Change Log
 
+## 4.3.8
+
+### Patch Changes
+
+- 9ea5ce5: import node:http,https,http2 using default export object (writable)
+
+## 4.3.7
+
+### Patch Changes
+
+- Updated dependencies [776bc52]
+- Updated dependencies [5b92a54]
+  - @smithy/types@4.14.3
+  - @smithy/core@3.24.6
+
+## 4.3.6
+
+### Patch Changes
+
+- dfa58f2: switch from node:url->parse to new URL() for parsing URI
+
+## 4.3.5
+
+### Patch Changes
+
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
+
+## 4.3.4
+
+### Patch Changes
+
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
+
+## 4.3.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+  - @smithy/core@3.24.3
+
+## 4.3.2
+
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+
+## 4.3.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+
+## 4.3.0
+
+### Minor Changes
+
+- 4f30af1: consolidation for core/protocols
+- 62fed78: package consolidation for core/config
+
+### Patch Changes
+
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0
+
+## 4.2.14
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+  - @smithy/node-config-provider@4.3.14
+  - @smithy/property-provider@4.2.14
+  - @smithy/url-parser@4.2.14
+
+## 4.2.13
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/node-config-provider@4.3.13
+  - @smithy/property-provider@4.2.13
+  - @smithy/url-parser@4.2.13
+
 ## 4.2.12
 
 ### Patch Changes

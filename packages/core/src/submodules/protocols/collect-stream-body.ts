@@ -1,10 +1,10 @@
+import { Uint8ArrayBlobAdapter } from "@smithy/core/serde";
 import type { SerdeContext } from "@smithy/types";
-import { Uint8ArrayBlobAdapter } from "@smithy/util-stream";
 
 /**
- * @internal
- *
  * Collect low-level response body stream to Uint8Array.
+ *
+ * @internal
  */
 export const collectBody = async (
   streamBody: any = new Uint8Array(),

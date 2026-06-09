@@ -1,5 +1,5 @@
-import { booleanSelector, SelectorType } from "@smithy/util-config-provider";
-import { afterEach, describe, expect,test as it, vi } from "vitest";
+import { SelectorType, booleanSelector } from "@smithy/core/config";
+import { afterEach, describe, expect, test as it, vi } from "vitest";
 
 import {
   DEFAULT_DISABLE_REQUEST_COMPRESSION,
@@ -8,7 +8,7 @@ import {
   NODE_DISABLE_REQUEST_COMPRESSION_INI_NAME,
 } from "./NODE_DISABLE_REQUEST_COMPRESSION_CONFIG_OPTIONS";
 
-vi.mock("@smithy/util-config-provider");
+vi.mock("@smithy/core/config");
 
 describe("NODE_DISABLE_REQUEST_COMPRESSION_CONFIG_OPTIONS", () => {
   afterEach(() => {
@@ -17,14 +17,14 @@ describe("NODE_DISABLE_REQUEST_COMPRESSION_CONFIG_OPTIONS", () => {
 
   const test = (func: Function, obj: Record<string, string>, key: string, type: SelectorType) => {
     it.each([true, false, undefined])("returns %s", (output) => {
-      (vi.mocked(booleanSelector)).mockReturnValueOnce(output);
+      vi.mocked(booleanSelector).mockReturnValueOnce(output);
       expect(func(obj)).toEqual(output);
       expect(booleanSelector).toBeCalledWith(obj, key, type);
     });
 
     it("throws error", () => {
       const mockError = new Error("error");
-      (vi.mocked(booleanSelector)).mockImplementationOnce(() => {
+      vi.mocked(booleanSelector).mockImplementationOnce(() => {
         throw mockError;
       });
       expect(() => {

@@ -1,5 +1,122 @@
 # Change Log
 
+## 4.7.7
+
+### Patch Changes
+
+- 9ea5ce5: import node:http,https,http2 using default export object (writable)
+
+## 4.7.6
+
+### Patch Changes
+
+- Updated dependencies [776bc52]
+- Updated dependencies [5b92a54]
+  - @smithy/types@4.14.3
+  - @smithy/core@3.24.6
+
+## 4.7.5
+
+### Patch Changes
+
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
+
+## 4.7.4
+
+### Patch Changes
+
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
+
+## 4.7.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+  - @smithy/core@3.24.3
+
+## 4.7.2
+
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+
+## 4.7.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+
+## 4.7.0
+
+### Minor Changes
+
+- 9194e9f: consolidate into core/endpoints
+
+### Patch Changes
+
+- da4e89e: Avoid array allocation in header transform
+- 5329323: Remove empty object allocation in hot paths
+- 09093fb: Support passing options through to Node's http2.connect
+- 75603d4: Replace timeouts array with individual variables
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0
+
+## 4.6.1
+
+### Patch Changes
+
+- 769ed47: update http2 session closure to prefer session.close() on goaway rather than immediately invoking session.destroy()
+
+## 4.6.0
+
+### Minor Changes
+
+- 60d13c8: adds ref-counting logic for http2 sessions in the client connection pool.
+
+## 4.5.3
+
+### Patch Changes
+
+- 131fce4: add eventStream indicator signal for NodeHttp2ConnectionManager so it does not reuse connections for event streams
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+  - @smithy/protocol-http@5.3.14
+  - @smithy/querystring-builder@4.2.14
+
+## 4.5.2
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/protocol-http@5.3.13
+  - @smithy/querystring-builder@4.2.13
+
+## 4.5.1
+
+### Patch Changes
+
+- fac1a34: Move `@smithy/abort-controller` to devDeps
+
 ## 4.5.0
 
 ### Minor Changes

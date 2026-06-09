@@ -1,11 +1,13 @@
 import { NormalizedSchema } from "@smithy/core/schema";
 import {
+  LazyJsonString,
+  NumericValue,
   _parseEpochTimestamp,
   _parseRfc3339DateTimeWithOffset,
   _parseRfc7231DateTime,
-  LazyJsonString,
-  NumericValue,
+  fromBase64,
   splitHeader,
+  toUtf8,
 } from "@smithy/core/serde";
 import type {
   CodecSettings,
@@ -15,8 +17,6 @@ import type {
   TimestampEpochSecondsSchema,
   TimestampHttpDateSchema,
 } from "@smithy/types";
-import { fromBase64 } from "@smithy/util-base64";
-import { toUtf8 } from "@smithy/util-utf8";
 
 import { SerdeContext } from "../SerdeContext";
 import { determineTimestampFormat } from "./determineTimestampFormat";

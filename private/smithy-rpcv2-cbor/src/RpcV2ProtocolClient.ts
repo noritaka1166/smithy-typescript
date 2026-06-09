@@ -4,7 +4,12 @@ import {
   getHttpAuthSchemeEndpointRuleSetPlugin,
   getHttpSigningPlugin,
 } from "@smithy/core";
-import { getContentLengthPlugin } from "@smithy/middleware-content-length";
+import {
+  type DefaultsMode as __DefaultsMode,
+  type SmithyConfiguration as __SmithyConfiguration,
+  type SmithyResolvedConfiguration as __SmithyResolvedConfiguration,
+  Client as __Client,
+} from "@smithy/core/client";
 import {
   type EndpointInputConfig,
   type EndpointRequiredInputConfig,
@@ -12,20 +17,14 @@ import {
   type EndpointResolvedConfig,
   resolveEndpointConfig,
   resolveEndpointRequiredConfig,
-} from "@smithy/middleware-endpoint";
+} from "@smithy/core/endpoints";
+import { type HttpHandlerUserInput as __HttpHandlerUserInput, getContentLengthPlugin } from "@smithy/core/protocols";
 import {
   type RetryInputConfig,
   type RetryResolvedConfig,
   getRetryPlugin,
   resolveRetryConfig,
-} from "@smithy/middleware-retry";
-import type { HttpHandlerUserInput as __HttpHandlerUserInput } from "@smithy/protocol-http";
-import {
-  type DefaultsMode as __DefaultsMode,
-  type SmithyConfiguration as __SmithyConfiguration,
-  type SmithyResolvedConfiguration as __SmithyResolvedConfiguration,
-  Client as __Client,
-} from "@smithy/smithy-client";
+} from "@smithy/core/retry";
 import type {
   BodyLengthCalculator as __BodyLengthCalculator,
   CheckOptionalClientConfig as __CheckOptionalClientConfig,
@@ -46,31 +45,40 @@ import {
   defaultRpcV2ProtocolHttpAuthSchemeParametersProvider,
   resolveHttpAuthSchemeConfig,
 } from "./auth/httpAuthSchemeProvider";
-import { EmptyInputOutputCommandInput, EmptyInputOutputCommandOutput } from "./commands/EmptyInputOutputCommand";
-import { Float16CommandInput, Float16CommandOutput } from "./commands/Float16Command";
-import { FractionalSecondsCommandInput, FractionalSecondsCommandOutput } from "./commands/FractionalSecondsCommand";
-import { GreetingWithErrorsCommandInput, GreetingWithErrorsCommandOutput } from "./commands/GreetingWithErrorsCommand";
-import { NoInputOutputCommandInput, NoInputOutputCommandOutput } from "./commands/NoInputOutputCommand";
-import {
+import type { EmptyInputOutputCommandInput, EmptyInputOutputCommandOutput } from "./commands/EmptyInputOutputCommand";
+import type { Float16CommandInput, Float16CommandOutput } from "./commands/Float16Command";
+import type {
+  FractionalSecondsCommandInput,
+  FractionalSecondsCommandOutput,
+} from "./commands/FractionalSecondsCommand";
+import type {
+  GreetingWithErrorsCommandInput,
+  GreetingWithErrorsCommandOutput,
+} from "./commands/GreetingWithErrorsCommand";
+import type { NoInputOutputCommandInput, NoInputOutputCommandOutput } from "./commands/NoInputOutputCommand";
+import type {
   OperationWithDefaultsCommandInput,
   OperationWithDefaultsCommandOutput,
 } from "./commands/OperationWithDefaultsCommand";
-import {
+import type {
   OptionalInputOutputCommandInput,
   OptionalInputOutputCommandOutput,
 } from "./commands/OptionalInputOutputCommand";
-import { RecursiveShapesCommandInput, RecursiveShapesCommandOutput } from "./commands/RecursiveShapesCommand";
-import { RpcV2CborDenseMapsCommandInput, RpcV2CborDenseMapsCommandOutput } from "./commands/RpcV2CborDenseMapsCommand";
-import { RpcV2CborListsCommandInput, RpcV2CborListsCommandOutput } from "./commands/RpcV2CborListsCommand";
-import {
+import type { RecursiveShapesCommandInput, RecursiveShapesCommandOutput } from "./commands/RecursiveShapesCommand";
+import type {
+  RpcV2CborDenseMapsCommandInput,
+  RpcV2CborDenseMapsCommandOutput,
+} from "./commands/RpcV2CborDenseMapsCommand";
+import type { RpcV2CborListsCommandInput, RpcV2CborListsCommandOutput } from "./commands/RpcV2CborListsCommand";
+import type {
   RpcV2CborSparseMapsCommandInput,
   RpcV2CborSparseMapsCommandOutput,
 } from "./commands/RpcV2CborSparseMapsCommand";
-import {
+import type {
   SimpleScalarPropertiesCommandInput,
   SimpleScalarPropertiesCommandOutput,
 } from "./commands/SimpleScalarPropertiesCommand";
-import {
+import type {
   SparseNullsOperationCommandInput,
   SparseNullsOperationCommandOutput,
 } from "./commands/SparseNullsOperationCommand";

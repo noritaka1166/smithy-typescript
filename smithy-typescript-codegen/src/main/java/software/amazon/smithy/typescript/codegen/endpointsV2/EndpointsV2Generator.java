@@ -14,14 +14,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import software.amazon.smithy.codegen.core.SymbolDependency;
 import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.node.ArrayNode;
 import software.amazon.smithy.model.node.ObjectNode;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.rulesengine.language.syntax.rule.Condition;
+import software.amazon.smithy.rulesengine.language.syntax.rule.Rule;
+import software.amazon.smithy.rulesengine.logic.bdd.Bdd;
+import software.amazon.smithy.rulesengine.traits.EndpointBddTrait;
 import software.amazon.smithy.rulesengine.traits.EndpointRuleSetTrait;
 import software.amazon.smithy.typescript.codegen.CodegenUtils;
 import software.amazon.smithy.typescript.codegen.Dependency;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDelegator;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.TypeScriptSettings;
+import software.amazon.smithy.typescript.codegen.util.PatternDetectionCompression;
 import software.amazon.smithy.utils.SmithyInternalApi;
 
 /**
@@ -71,9 +78,11 @@ public final class EndpointsV2Generator implements Runnable {
     static final String ENDPOINT_PARAMETERS_FILE = ENDPOINT_PARAMETERS_MODULE_NAME + ".ts";
     static final String ENDPOINT_RESOLVER_FILE = ENDPOINT_RESOLVER_MODULE_NAME + ".ts";
     static final String ENDPOINT_RULESET_FILE = "ruleset.ts";
+    static final String ENDPOINT_BDD_FILE = "bdd.ts";
 
     private final TypeScriptDelegator delegator;
     private final EndpointRuleSetTrait endpointRuleSetTrait;
+    private final EndpointBddTrait endpointBddTrait;
     private final ServiceShape service;
     private final TypeScriptSettings settings;
     private final RuleSetParameterFinder ruleSetParameterFinder;
@@ -85,6 +94,7 @@ public final class EndpointsV2Generator implements Runnable {
         endpointRuleSetTrait = service
             .getTrait(EndpointRuleSetTrait.class)
             .orElseThrow(() -> new RuntimeException("service or model preprocessor missing EndpointRuleSetTrait"));
+        endpointBddTrait = service.getTrait(EndpointBddTrait.class).orElse(ConvertBdd.convert(model, settings));
         ruleSetParameterFinder = new RuleSetParameterFinder(service);
     }
 
@@ -92,7 +102,11 @@ public final class EndpointsV2Generator implements Runnable {
     public void run() {
         generateEndpointParameters();
         generateEndpointResolver();
-        generateEndpointRuleset();
+        if (settings.generateEndpointBdd()) {
+            generateEndpointBdd();
+        } else {
+            generateEndpointRuleset();
+        }
     }
 
     /**
@@ -253,9 +267,48 @@ public final class EndpointsV2Generator implements Runnable {
                 writer.addTypeImport("EndpointV2", null, TypeScriptDependency.SMITHY_TYPES);
                 writer.addTypeImport("Logger", null, TypeScriptDependency.SMITHY_TYPES);
 
-                writer.addDependency(TypeScriptDependency.UTIL_ENDPOINTS);
-                writer.addTypeImport("EndpointParams", null, TypeScriptDependency.UTIL_ENDPOINTS);
-                writer.addImport("resolveEndpoint", null, TypeScriptDependency.UTIL_ENDPOINTS);
+                writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+                writer.addTypeImportSubmodule(
+                    "EndpointParams",
+                    null,
+                    TypeScriptDependency.SMITHY_CORE,
+                    SmithyCoreSubmodules.ENDPOINTS
+                );
+                if (settings.generateEndpointBdd()) {
+                    writer.addImportSubmodule(
+                        "decideEndpoint",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.ENDPOINTS
+                    );
+                    writer.addRelativeImport(
+                        "bdd",
+                        null,
+                        Paths.get(
+                            ".",
+                            CodegenUtils.SOURCE_FOLDER,
+                            ENDPOINT_FOLDER,
+                            ENDPOINT_BDD_FILE.replace(".ts", "")
+                        )
+                    );
+                } else {
+                    writer.addImportSubmodule(
+                        "resolveEndpoint",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.ENDPOINTS
+                    );
+                    writer.addRelativeImport(
+                        "ruleSet",
+                        null,
+                        Paths.get(
+                            ".",
+                            CodegenUtils.SOURCE_FOLDER,
+                            ENDPOINT_FOLDER,
+                            ENDPOINT_RULESET_FILE.replace(".ts", "")
+                        )
+                    );
+                }
                 writer.addRelativeTypeImport(
                     "EndpointParameters",
                     null,
@@ -266,18 +319,13 @@ public final class EndpointsV2Generator implements Runnable {
                         ENDPOINT_PARAMETERS_FILE.replace(".ts", "")
                     )
                 );
-                writer.addRelativeImport(
-                    "ruleSet",
-                    null,
-                    Paths.get(
-                        ".",
-                        CodegenUtils.SOURCE_FOLDER,
-                        ENDPOINT_FOLDER,
-                        ENDPOINT_RULESET_FILE.replace(".ts", "")
-                    )
-                );
 
-                writer.addImport("EndpointCache", null, TypeScriptDependency.UTIL_ENDPOINTS);
+                writer.addImportSubmodule(
+                    "EndpointCache",
+                    null,
+                    TypeScriptDependency.SMITHY_CORE,
+                    SmithyCoreSubmodules.ENDPOINTS
+                );
 
                 List<String> effectiveParams = ruleSetParameterFinder.getEffectiveParams();
                 boolean longList = effectiveParams.size() >= 8;
@@ -314,13 +362,14 @@ public final class EndpointsV2Generator implements Runnable {
                       context: { logger?: Logger } = {}
                     ): EndpointV2 => {
                       return cache.get(endpointParams as EndpointParams, () =>
-                        resolveEndpoint(ruleSet, {
+                        $L, {
                           endpointParams: endpointParams as EndpointParams,
                           logger: context.logger,
                         })
                       );
                     };
-                    """
+                    """,
+                    settings.generateEndpointBdd() ? "decideEndpoint(bdd" : "resolveEndpoint(ruleSet"
                 );
             }
         );
@@ -339,5 +388,95 @@ public final class EndpointsV2Generator implements Runnable {
                 new RuleSetSerializer(endpointRuleSetTrait.getRuleSet(), writer).generate();
             }
         );
+    }
+
+    private void generateEndpointBdd() {
+        if (endpointBddTrait == null) {
+            throw new RuntimeException("generateEndpointBdd() called but endpointBddTrait is null.");
+        }
+
+        this.delegator.useFileWriter(
+            Paths.get(CodegenUtils.SOURCE_FOLDER, ENDPOINT_FOLDER, ENDPOINT_BDD_FILE).toString(),
+            writer -> {
+                ObjectNode conditionsAndResults = ObjectNode.fromStringMap(Collections.emptyMap());
+
+                List<Condition> conditions = endpointBddTrait.getConditions();
+                conditionsAndResults = conditionsAndResults.withMember(
+                    "conditions",
+                    ArrayNode.fromNodes(
+                        conditions.stream().map(c -> new ConditionSerializer(c).toArrayNode()).toList()
+                    )
+                );
+
+                List<Rule> results = endpointBddTrait.getResults();
+                conditionsAndResults = conditionsAndResults.withMember(
+                    "results",
+                    ArrayNode.fromNodes(
+                        results.stream().map(r -> new RuleSerializer(r).toArrayNode()).toList()
+                    )
+                );
+
+                writer.write(
+                    new PatternDetectionCompression(conditionsAndResults).compress()
+                );
+
+                Bdd bdd = endpointBddTrait.getBdd();
+
+                writer.write(
+                    """
+                    const root = $L;
+                    const r = 100_000_000;
+                    const nodes = new Int32Array([""",
+                    endpointBddTrait.getBdd().getRootRef()
+                ).indent();
+
+                bdd.getNodes((i, hi, lo) -> {
+                    writer.write(
+                        """
+                        $L, $L, $L,""",
+                        shortestJsLiteral(i),
+                        shortestJsLiteral(hi),
+                        shortestJsLiteral(lo)
+                    );
+                });
+
+                writer.dedent().write("""
+                                      ]);""");
+                writer.addImportSubmodule(
+                    "BinaryDecisionDiagram",
+                    null,
+                    TypeScriptDependency.SMITHY_CORE,
+                    SmithyCoreSubmodules.ENDPOINTS
+                );
+                writer.write("""
+                             export const bdd = BinaryDecisionDiagram.from(
+                               nodes, root, _data.conditions, _data.results
+                             );""");
+            }
+        );
+    }
+
+    private static String shortestJsLiteral(int value) {
+        String decimal = Integer.toString(value);
+        String hex = "0x" + Integer.toHexString(value).toUpperCase();
+        String octal = "0o" + Integer.toOctalString(value);
+        String binary = "0b" + Integer.toBinaryString(value);
+
+        String shortest = decimal;
+        if (hex.length() < shortest.length()) {
+            shortest = hex;
+        }
+        if (octal.length() < shortest.length()) {
+            shortest = octal;
+        }
+        if (binary.length() < shortest.length()) {
+            shortest = binary;
+        }
+
+        if (shortest.equals(decimal) && value >= 100000000) {
+            return "r + " + (value - 100000000);
+        }
+
+        return shortest;
     }
 }

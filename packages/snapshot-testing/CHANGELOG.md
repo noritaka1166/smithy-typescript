@@ -1,5 +1,150 @@
 # Change Log
 
+## 2.1.8
+
+### Patch Changes
+
+- Updated dependencies [9ea5ce5]
+  - @smithy/node-http-handler@4.7.7
+
+## 2.1.7
+
+### Patch Changes
+
+- Updated dependencies [776bc52]
+- Updated dependencies [5b92a54]
+  - @smithy/types@4.14.3
+  - @smithy/core@3.24.6
+  - @smithy/node-http-handler@4.7.6
+
+## 2.1.6
+
+### Patch Changes
+
+- a87363c: filter out exec-env with version suffix
+
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
+  - @smithy/node-http-handler@4.7.5
+
+## 2.1.4
+
+### Patch Changes
+
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
+  - @smithy/node-http-handler@4.7.4
+
+## 2.1.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+  - @smithy/core@3.24.3
+  - @smithy/node-http-handler@4.7.3
+
+## 2.1.2
+
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+  - @smithy/node-http-handler@4.7.2
+
+## 2.1.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+  - @smithy/node-http-handler@4.7.1
+
+## 2.1.0
+
+### Minor Changes
+
+- 4f30af1: consolidation for core/protocols
+- 8963b91: consolidate packages into core/serde
+- cad44fc: consolidate core/event-streams
+
+### Patch Changes
+
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [da4e89e]
+- Updated dependencies [5329323]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [09093fb]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [75603d4]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0
+  - @smithy/node-http-handler@4.7.0
+
+## 2.0.8
+
+### Patch Changes
+
+- Updated dependencies [769ed47]
+  - @smithy/node-http-handler@4.6.1
+  - @smithy/core@3.23.17
+
+## 2.0.7
+
+### Patch Changes
+
+- Updated dependencies [a029f0e]
+- Updated dependencies [60d13c8]
+  - @smithy/core@3.23.16
+  - @smithy/node-http-handler@4.6.0
+
+## 2.0.6
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/node-http-handler@4.5.3
+  - @smithy/types@4.14.1
+  - @smithy/core@3.23.15
+  - @smithy/eventstream-codec@4.2.14
+  - @smithy/protocol-http@5.3.14
+
+## 2.0.5
+
+### Patch Changes
+
+- fe15001: generate sparse values in snapshots
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/core@3.23.14
+  - @smithy/eventstream-codec@4.2.13
+  - @smithy/node-http-handler@4.5.2
+  - @smithy/protocol-http@5.3.13
+
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies [fac1a34]
+- Updated dependencies [7198e09]
+  - @smithy/node-http-handler@4.5.1
+  - @smithy/core@3.23.13
+
 ## 2.0.3
 
 ### Patch Changes

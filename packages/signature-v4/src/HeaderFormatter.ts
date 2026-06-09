@@ -1,11 +1,11 @@
-import type { Int64 as IInt64, MessageHeaders, MessageHeaderValue } from "@smithy/types";
-import { fromHex, toHex } from "@smithy/util-hex-encoding";
-import { fromUtf8 } from "@smithy/util-utf8";
+import { fromHex, fromUtf8, toHex } from "@smithy/core/serde";
+import type { Int64 as IInt64, MessageHeaderValue, MessageHeaders } from "@smithy/types";
 
 /**
- * @internal
  * TODO: duplicated from @smithy/eventstream-codec to break large dependency.
  * TODO: This should be moved to its own deduped submodule in @smithy/core when submodules are implemented.
+ *
+ * @internal
  */
 export class HeaderFormatter {
   public format(headers: MessageHeaders): Uint8Array {

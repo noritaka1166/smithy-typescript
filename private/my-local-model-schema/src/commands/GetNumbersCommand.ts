@@ -1,6 +1,6 @@
 // smithy-typescript generated code
-import { getEndpointPlugin } from "@smithy/middleware-endpoint";
-import { Command as $Command } from "@smithy/smithy-client";
+import { Command as $Command } from "@smithy/core/client";
+import { getEndpointPlugin } from "@smithy/core/endpoints";
 import type { MetadataBearer as __MetadataBearer } from "@smithy/types";
 
 import { commonParams } from "../endpoint/EndpointParameters";
@@ -45,6 +45,12 @@ export interface GetNumbersCommandOutput extends GetNumbersResponse, __MetadataB
  *   startToken: "STRING_VALUE",
  *   maxResults: Number("int"),
  *   customHeaderInput: "STRING_VALUE",
+ *   numbers: { // IntegerMap
+ *     "<keys>": Number("int"),
+ *   },
+ *   sparseNumbers: { // SparseIntegerMap
+ *     "<keys>": Number("int"),
+ *   },
  * };
  * const command = new GetNumbersCommand(input);
  * const response = await client.send(command);
@@ -52,6 +58,9 @@ export interface GetNumbersCommandOutput extends GetNumbersResponse, __MetadataB
  * //   bigDecimal: Number("bigdecimal"),
  * //   bigInteger: Number("bigint"),
  * //   numbers: [ // IntegerList
+ * //     Number("int"),
+ * //   ],
+ * //   sparseNumbers: [ // SparseIntegerList
  * //     Number("int"),
  * //   ],
  * //   nextToken: "STRING_VALUE",

@@ -131,7 +131,7 @@ final class CommandGenerator implements Runnable {
         writer.addRelativeTypeImport(configType, null, servicePath);
         writer.addRelativeTypeImport("ServiceInputTypes", null, servicePath);
         writer.addRelativeTypeImport("ServiceOutputTypes", null, servicePath);
-        writer.addImport("Command", "$Command", TypeScriptDependency.AWS_SMITHY_CLIENT);
+        writer.addImportSubmodule("Command", "$Command", TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.CLIENT);
 
         String name = symbol.getName();
 
@@ -505,7 +505,11 @@ final class CommandGenerator implements Runnable {
     }
 
     private void generateCommandMiddlewareResolver(String configType) {
-        Symbol serde = TypeScriptDependency.MIDDLEWARE_SERDE.createSymbol("getSerdePlugin");
+        Symbol serde = Symbol.builder()
+            .namespace(TypeScriptDependency.SMITHY_CORE.packageName + SmithyCoreSubmodules.SERDE, "/")
+            .name("getSerdePlugin")
+            .addDependency(TypeScriptDependency.SMITHY_CORE)
+            .build();
         boolean schemaMode = SchemaGenerationAllowlist.allows(service.getId(), settings);
 
         Function<StructureShape, String> getFilterFunctionName = input -> {
@@ -546,7 +550,12 @@ final class CommandGenerator implements Runnable {
                         .map(RuntimeClientPlugin::getPluginFunction)
                         .anyMatch(Optional::isPresent);
 
-            writer.addImport("getEndpointPlugin", null, TypeScriptDependency.MIDDLEWARE_ENDPOINTS_V2);
+            writer.addImportSubmodule(
+                "getEndpointPlugin",
+                null,
+                TypeScriptDependency.SMITHY_CORE,
+                SmithyCoreSubmodules.ENDPOINTS
+            );
 
             if (multiplePlugins) {
                 writer.write("");

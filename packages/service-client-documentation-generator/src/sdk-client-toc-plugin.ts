@@ -1,4 +1,4 @@
-import { dirname } from "path";
+import { dirname } from "node:path";
 import type {
   Context,
   DeclarationReflection,
@@ -21,9 +21,9 @@ import {
 import { isClientModel } from "./utils";
 
 /**
- * @internal
- *
  * Group the ToC for easier observability.
+ *
+ * @internal
  */
 export class SdkClientTocPlugin {
   private clientDir?: string;

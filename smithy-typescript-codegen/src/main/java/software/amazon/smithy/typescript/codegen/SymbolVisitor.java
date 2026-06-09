@@ -58,9 +58,9 @@ import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.MediaTypeTrait;
+import software.amazon.smithy.model.traits.SparseTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
-import software.amazon.smithy.typescript.codegen.schema.SchemaGenerationAllowlist;
 import software.amazon.smithy.utils.SmithyInternalApi;
 import software.amazon.smithy.utils.StringUtils;
 
@@ -81,7 +81,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     private final ReservedWordSymbolProvider.Escaper escaper;
     private final Set<StructureShape> errorShapes = new HashSet<>();
     private final ModuleNameDelegator moduleNameDelegator;
-    private final boolean schemaMode;
+    private final boolean createTypeOnlySymbols;
 
     SymbolVisitor(Model model, TypeScriptSettings settings) {
         this(model, settings, ModuleNameDelegator.DEFAULT_CHUNK_SIZE);
@@ -90,7 +90,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     SymbolVisitor(Model model, TypeScriptSettings settings, int shapeChunkSize) {
         this.model = model;
         this.settings = settings;
-        schemaMode = SchemaGenerationAllowlist.allows(settings.getService(), settings);
+        createTypeOnlySymbols = settings.generateClient();
 
         // Load reserved words from a new-line delimited file.
         ReservedWords reservedWords = new ReservedWordsBuilder()
@@ -125,7 +125,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
 
     @Override
     public Symbol toSymbol(Shape shape) {
-        boolean typeOnly = schemaMode;
+        boolean typeOnly = createTypeOnlySymbols;
         boolean isError = shape.asStructureShape().isPresent() && shape.hasTrait(ErrorTrait.class);
         if (shape.isOperationShape() || shape.isResourceShape() || isError || shape.isServiceShape()) {
             typeOnly = false;
@@ -150,7 +150,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
                         .addDependency(TypeScriptDependency.SMITHY_TYPES)
                         .name("StreamingBlobTypes")
                         .namespace("@smithy/types", "/")
-                        .putProperty("typeOnly", schemaMode)
+                        .putProperty("typeOnly", createTypeOnlySymbols)
                         .build()
                 )
                 .build();
@@ -166,10 +166,13 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
 
     @Override
     public Symbol listShape(ListShape shape) {
+        boolean sparse = shape.hasTrait(SparseTrait.ID);
         Symbol reference = toSymbol(shape.getMember());
-        return createSymbolBuilder(shape, format("%s[]", reference.getName()), null)
+        String valueType = (sparse ? "(" : "") + reference.getName() + (sparse ? " | null)" : "");
+
+        return createSymbolBuilder(shape, format("%s[]", valueType), null)
             .addReference(reference)
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .build();
     }
 
@@ -178,7 +181,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
         Symbol reference = toSymbol(shape.getMember());
         return createSymbolBuilder(shape, format("%s[]", reference.getName()), null)
             .addReference(reference)
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .build();
     }
 
@@ -202,14 +205,17 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
 
         boolean stringKey = key.toString().equals("string");
 
+        boolean sparse = shape.hasTrait(SparseTrait.ID);
+        String valueType = value.getName() + (sparse ? " | null" : "");
+
         return createSymbolBuilder(
             shape,
-            format(stringKey ? "Record<%s, %s>" : "Partial<Record<%s, %s>>", key.getName(), value.getName()),
+            format(stringKey ? "Record<%s, %s>" : "Partial<Record<%s, %s>>", key.getName(), valueType),
             null
         )
             .addReference(key)
             .addReference(value)
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .build();
     }
 
@@ -263,7 +269,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
                     Symbol.builder()
                         .addDependency(TypeScriptDependency.SMITHY_CORE)
                         .name("NumericValue")
-                        .putProperty("typeOnly", schemaMode)
+                        .putProperty("typeOnly", createTypeOnlySymbols)
                         .namespace("@smithy/core/serde", "/")
                         .build()
                 )
@@ -285,13 +291,13 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
         Symbol importSymbol = Symbol.builder()
             .name("DocumentType")
             .namespace(TypeScriptDependency.SMITHY_TYPES.packageName, "/")
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .build();
         SymbolReference reference = SymbolReference.builder()
             .symbol(importSymbol)
             .alias("__DocumentType")
             .options(SymbolReference.ContextOption.USE)
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .build();
         return builder.addReference(reference).build();
     }
@@ -305,11 +311,11 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
         // Add input and output type symbols (XCommandInput / XCommandOutput).
         builder.putProperty(
             "inputType",
-            intermediate.toBuilder().putProperty("typeOnly", schemaMode).name(commandName + "Input").build()
+            intermediate.toBuilder().putProperty("typeOnly", createTypeOnlySymbols).name(commandName + "Input").build()
         );
         builder.putProperty(
             "outputType",
-            intermediate.toBuilder().putProperty("typeOnly", schemaMode).name(commandName + "Output").build()
+            intermediate.toBuilder().putProperty("typeOnly", createTypeOnlySymbols).name(commandName + "Output").build()
         );
         return builder.build();
     }
@@ -376,7 +382,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     }
 
     private Symbol.Builder addSmithyUseImport(Symbol.Builder builder, String name, String as) {
-        Symbol importSymbol = Symbol.builder().name(name).namespace("@smithy/smithy-client", "/").build();
+        Symbol importSymbol = Symbol.builder().name(name).namespace("@smithy/core/serde", "/").build();
         SymbolReference reference = SymbolReference.builder()
             .symbol(importSymbol)
             .alias(as)
@@ -428,7 +434,7 @@ final class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     private Symbol createMemberSymbolWithEventStream(Symbol targetSymbol) {
         return targetSymbol
             .toBuilder()
-            .putProperty("typeOnly", schemaMode)
+            .putProperty("typeOnly", createTypeOnlySymbols)
             .namespace(null, "/")
             .name(String.format("AsyncIterable<%s>", targetSymbol.getName()))
             .addReference(targetSymbol)

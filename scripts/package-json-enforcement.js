@@ -1,5 +1,6 @@
-const { error } = require("console");
 const fs = require("fs");
+const path = require("path");
+const { sortScripts } = require("./utils/sort-scripts");
 
 /**
  * This enforcement is not here to prevent adoption of newer
@@ -26,7 +27,10 @@ module.exports = function (pkgJsonFilePath, overwrite = false) {
   const errors = [];
 
   const pkgJson = require(pkgJsonFilePath);
-  if (!pkgJson.name.endsWith("/core")) {
+  const pkgDirRoot = path.dirname(pkgJsonFilePath);
+  const isSubmoduleCarrier = fs.existsSync(path.join(pkgDirRoot, "src", "submodules")) && "exports" in pkgJson;
+
+  if (!isSubmoduleCarrier) {
     if ("exports" in pkgJson) {
       errors.push(`${pkgJson.name} must not have an 'exports' field.`);
       if (overwrite) {
@@ -60,45 +64,392 @@ module.exports = function (pkgJsonFilePath, overwrite = false) {
   }
 
   if (typeof pkgJson.browser === "object" && typeof pkgJson["react-native"] === "object") {
-    const browserCanonical = Object.entries(pkgJson.browser).reduce((acc, [k, v]) => {
-      if (!k.includes("dist-cjs/") || typeof v === "boolean") {
-        acc[k] = v;
-      }
-      return acc;
-    }, {});
+    // Skip canonicalization for packages with submodules — they manage their own fields.
+    if (!isSubmoduleCarrier) {
+      const browserCanonical = Object.entries(pkgJson.browser).reduce((acc, [k, v]) => {
+        if (!k.includes("dist-cjs/") || typeof v === "boolean") {
+          acc[k] = v;
+        }
+        return acc;
+      }, {});
 
-    if (Object.keys(browserCanonical).length !== Object.keys(pkgJson.browser).length) {
-      errors.push(`${pkgJson.name} browser field is incomplete.`);
-      if (overwrite) {
-        pkgJson.browser = browserCanonical;
+      if (Object.keys(browserCanonical).length !== Object.keys(pkgJson.browser).length) {
+        errors.push(`${pkgJson.name} browser field is incomplete.`);
+        if (overwrite) {
+          pkgJson.browser = browserCanonical;
+        }
+      }
+
+      const reactNativeCanonical = [
+        ...new Set([
+          ...Object.entries(pkgJson["react-native"]).map(([k, v]) => [
+            k.replace("dist-cjs", "dist-es"),
+            typeof v === "string" ? v.replace("dist-cjs", "dist-es") : v,
+          ]),
+          ...Object.entries(pkgJson["react-native"]).map(([k, v]) => [
+            k.replace("dist-es", "dist-cjs"),
+            typeof v === "string" ? v.replace("dist-es", "dist-cjs") : v,
+          ]),
+        ]),
+      ].reduce((acc, [k, v]) => {
+        acc[k] = v;
+        return acc;
+      }, {});
+
+      if (Object.keys(reactNativeCanonical).length !== Object.keys(pkgJson["react-native"]).length) {
+        errors.push(`${pkgJson.name} react-native field is incomplete.`);
+        if (overwrite) {
+          pkgJson["react-native"] = reactNativeCanonical;
+        }
+      }
+    } else {
+      // For submodule packages, validate that index.browser.ts/index.native.ts are declared.
+      const submodulesDir = path.join(pkgDirRoot, "src", "submodules");
+      const browserField = pkgJson.browser || {};
+      const reactNativeField = pkgJson["react-native"] || {};
+      let didModify = false;
+
+      for (const sub of fs.readdirSync(submodulesDir)) {
+        const subPath = path.join(submodulesDir, sub);
+        if (!fs.lstatSync(subPath).isDirectory()) {
+          continue;
+        }
+
+        const esIndex = `./dist-es/submodules/${sub}/index.js`;
+        const cjsIndex = `./dist-cjs/submodules/${sub}/index.js`;
+
+        if (fs.existsSync(path.join(subPath, "index.browser.ts"))) {
+          const esBrowserExpected = `./dist-es/submodules/${sub}/index.browser.js`;
+
+          // browser field: re-path dist-es only.
+          if (browserField[esIndex] !== esBrowserExpected) {
+            errors.push(`${pkgJson.name} browser["${esIndex}"] should be "${esBrowserExpected}"`);
+            if (overwrite) {
+              browserField[esIndex] = esBrowserExpected;
+              didModify = true;
+            }
+          }
+
+          // Conditional exports must have "browser" condition pointing to dist-es.
+          const exportEntry = pkgJson.exports?.[`./${sub}`];
+          if (exportEntry) {
+            const esBrowser = esBrowserExpected;
+            const cjsBrowser = esBrowser.replace("dist-es", "dist-cjs");
+            const expectedBrowser = { import: esBrowser, require: cjsBrowser };
+            if (JSON.stringify(exportEntry.browser) !== JSON.stringify(expectedBrowser)) {
+              errors.push(`${pkgJson.name} exports["./${sub}"].browser should be ${JSON.stringify(expectedBrowser)}`);
+              if (overwrite) {
+                exportEntry.browser = expectedBrowser;
+              }
+            }
+            // react-native condition: native variant if exists, otherwise browser fallback.
+            const hasNative = fs.existsSync(path.join(subPath, "index.native.ts"));
+            const esRn = hasNative
+              ? `./dist-es/submodules/${sub}/index.native.js`
+              : esBrowser;
+            const cjsRn = esRn.replace("dist-es", "dist-cjs");
+            const expectedRn = { import: esRn, require: cjsRn };
+            if (JSON.stringify(exportEntry["react-native"]) !== JSON.stringify(expectedRn)) {
+              errors.push(`${pkgJson.name} exports["./${sub}"]["react-native"] should be ${JSON.stringify(expectedRn)}`);
+              if (overwrite) {
+                exportEntry["react-native"] = expectedRn;
+              }
+            }
+          }
+        }
+
+        if (fs.existsSync(path.join(subPath, "index.native.ts"))) {
+          const esNativeExpected = `./dist-es/submodules/${sub}/index.native.js`;
+          const cjsNativeExpected = `./dist-cjs/submodules/${sub}/index.native.js`;
+
+          // react-native field: re-path both dist-es and dist-cjs.
+          if (reactNativeField[esIndex] !== esNativeExpected) {
+            errors.push(`${pkgJson.name} react-native["${esIndex}"] should be "${esNativeExpected}"`);
+            if (overwrite) {
+              reactNativeField[esIndex] = esNativeExpected;
+              didModify = true;
+            }
+          }
+          if (reactNativeField[cjsIndex] !== cjsNativeExpected) {
+            errors.push(`${pkgJson.name} react-native["${cjsIndex}"] should be "${cjsNativeExpected}"`);
+            if (overwrite) {
+              reactNativeField[cjsIndex] = cjsNativeExpected;
+              didModify = true;
+            }
+          }
+        } else if (fs.existsSync(path.join(subPath, "index.browser.ts"))) {
+          // No native variant — react-native falls back to browser for both dist-es and dist-cjs.
+          const esBrowserExpected = `./dist-es/submodules/${sub}/index.browser.js`;
+          const cjsBrowserExpected = `./dist-cjs/submodules/${sub}/index.browser.js`;
+
+          if (reactNativeField[esIndex] !== esBrowserExpected) {
+            errors.push(`${pkgJson.name} react-native["${esIndex}"] should be "${esBrowserExpected}" (fallback to browser)`);
+            if (overwrite) {
+              reactNativeField[esIndex] = esBrowserExpected;
+              didModify = true;
+            }
+          }
+          if (reactNativeField[cjsIndex] !== cjsBrowserExpected) {
+            errors.push(`${pkgJson.name} react-native["${cjsIndex}"] should be "${cjsBrowserExpected}" (fallback to browser)`);
+            if (overwrite) {
+              reactNativeField[cjsIndex] = cjsBrowserExpected;
+              didModify = true;
+            }
+          }
+        }
+      }
+
+      // Enforce condition key ordering in exports.
+      const expectedOrder = ["types", "react-native", "browser", "module", "node", "import", "require", "default"];
+      for (const [exportPath, exportEntry] of Object.entries(pkgJson.exports)) {
+        if (typeof exportEntry !== "object" || exportEntry === null) {
+          continue;
+        }
+        const keys = Object.keys(exportEntry);
+        const ordered = keys.slice().sort((a, b) => {
+          const ai = expectedOrder.indexOf(a);
+          const bi = expectedOrder.indexOf(b);
+          return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        });
+        if (JSON.stringify(keys) !== JSON.stringify(ordered)) {
+          errors.push(`${pkgJson.name} exports["${exportPath}"] keys should be ordered: ${ordered.join(", ")}`);
+          if (overwrite) {
+            const reordered = {};
+            for (const k of ordered) {
+              reordered[k] = exportEntry[k];
+            }
+            pkgJson.exports[exportPath] = reordered;
+          }
+        }
+      }
+
+      if (didModify) {
+        pkgJson.browser = browserField;
+        pkgJson["react-native"] = reactNativeField;
+      }
+    }
+  }
+
+  // Validate variant replacement directives match source files.
+  // Skip for packages with submodules — they use index-level variant files instead.
+  const srcDir = path.join(pkgDirRoot, "src");
+  if (fs.existsSync(srcDir) && !isSubmoduleCarrier) {
+    const browserField = pkgJson.browser || {};
+    const reactNativeField = pkgJson["react-native"] || {};
+    let didModify = false;
+
+    // Check that every .browser.ts / .native.ts source file has directives.
+    const walkSync = (dir) => {
+      const results = [];
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          results.push(...walkSync(fullPath));
+        } else {
+          results.push(fullPath);
+        }
+      }
+      return results;
+    };
+
+    for (const file of walkSync(srcDir)) {
+      if (file.match(/\.(browser|native)\.ts$/) && !file.match(/\.spec\.|\.integ\./)) {
+        const relativePath = file.replace(srcDir, "").replace(/\.ts$/, "");
+        const canonicalPath = relativePath.replace(/\.(browser|native)$/, "");
+        const variant = relativePath.match(/\.(browser|native)$/)[1];
+
+        const esCanonical = `./dist-es${canonicalPath}`;
+        const esVariant = `./dist-es${relativePath}`;
+        const cjsCanonical = `./dist-cjs${canonicalPath}`;
+        const cjsVariant = `./dist-cjs${relativePath}`;
+
+        // For react-native, .native takes precedence over .browser.
+        const hasNativeVariant = variant === "browser" && fs.existsSync(file.replace(/\.browser\.ts$/, ".native.ts"));
+
+        if (variant === "browser") {
+          if (browserField[esCanonical] !== esVariant) {
+            errors.push(`${pkgJson.name} browser["${esCanonical}"] should be "${esVariant}"`);
+            if (overwrite) {
+              browserField[esCanonical] = esVariant;
+              didModify = true;
+            }
+          }
+          if (!hasNativeVariant) {
+            if (reactNativeField[esCanonical] !== esVariant) {
+              errors.push(`${pkgJson.name} react-native["${esCanonical}"] should be "${esVariant}"`);
+              if (overwrite) {
+                reactNativeField[esCanonical] = esVariant;
+                didModify = true;
+              }
+            }
+            if (reactNativeField[cjsCanonical] !== cjsVariant) {
+              errors.push(`${pkgJson.name} react-native["${cjsCanonical}"] should be "${cjsVariant}"`);
+              if (overwrite) {
+                reactNativeField[cjsCanonical] = cjsVariant;
+                didModify = true;
+              }
+            }
+          }
+        } else if (variant === "native") {
+          if (reactNativeField[esCanonical] !== esVariant) {
+            errors.push(`${pkgJson.name} react-native["${esCanonical}"] should be "${esVariant}"`);
+            if (overwrite) {
+              reactNativeField[esCanonical] = esVariant;
+              didModify = true;
+            }
+          }
+          if (reactNativeField[cjsCanonical] !== cjsVariant) {
+            errors.push(`${pkgJson.name} react-native["${cjsCanonical}"] should be "${cjsVariant}"`);
+            if (overwrite) {
+              reactNativeField[cjsCanonical] = cjsVariant;
+              didModify = true;
+            }
+          }
+        }
       }
     }
 
-    const reactNativeCanonical = [
-      ...new Set([
-        ...Object.entries(pkgJson["react-native"]).map(([k, v]) => [
-          k.replace("dist-cjs", "dist-es"),
-          typeof v === "string" ? v.replace("dist-cjs", "dist-es") : v,
-        ]),
-        ...Object.entries(pkgJson["react-native"]).map(([k, v]) => [
-          k.replace("dist-es", "dist-cjs"),
-          typeof v === "string" ? v.replace("dist-es", "dist-cjs") : v,
-        ]),
-      ]),
-    ].reduce((acc, [k, v]) => {
-      const automatic = typeof v === "string" ? v.match(/\.native(\.js)?$/) && k === v.replace(".native", "") : false;
-      if (!automatic) {
-        acc[k] = v;
-      } else {
-        errors.push(`${k} -> ${v} is unnecessary in ${pkgJson.name} (automatic in React-Native bundler)`);
+    if (didModify) {
+      if (Object.keys(browserField).length) {
+        pkgJson.browser = browserField;
       }
-      return acc;
-    }, {});
+      if (Object.keys(reactNativeField).length) {
+        pkgJson["react-native"] = reactNativeField;
+      }
+    }
 
-    if (Object.keys(reactNativeCanonical).length !== Object.keys(pkgJson["react-native"]).length) {
-      errors.push(`${pkgJson.name} react-native field is incomplete.`);
+    // Verify each existing directive points to an actual source file.
+    for (const [field, directives] of [
+      ["browser", pkgJson.browser],
+      ["react-native", pkgJson["react-native"]],
+    ]) {
+      if (typeof directives !== "object" || directives === null) {
+        continue;
+      }
+      for (const [canonical, variant] of Object.entries(directives)) {
+        if (typeof variant === "boolean") {
+          continue;
+        }
+        if (!variant.startsWith("./")) {
+          continue;
+        }
+        const variantSrcFile = path.join(
+          pkgDirRoot,
+          variant.replace(/^\.\/dist-(es|cjs)/, "src").replace(/(\.js)?$/, ".ts")
+        );
+        if (!fs.existsSync(variantSrcFile)) {
+          errors.push(
+            `${pkgJson.name} ${field}["${canonical}"] -> "${variant}" has no corresponding source file (expected ${variantSrcFile})`
+          );
+        }
+      }
+    }
+  }
+
+  // Enforce lint script and build integration for submodule carriers.
+  if (isSubmoduleCarrier) {
+    const relScripts = path.relative(pkgDirRoot, path.join(__dirname, "validation"));
+    const expectedLint = `node ${relScripts}/submodules-linter.js`;
+
+    if (!pkgJson.scripts?.lint || !pkgJson.scripts.lint.includes("submodules-linter")) {
+      errors.push(`${pkgJson.name} must have a "lint" script that calls the submodules-linter`);
       if (overwrite) {
-        pkgJson["react-native"] = reactNativeCanonical;
+        pkgJson.scripts = pkgJson.scripts || {};
+        pkgJson.scripts.lint = expectedLint;
+      }
+    }
+
+    if (!pkgJson.scripts?.build || !pkgJson.scripts.build.includes("yarn lint")) {
+      errors.push(`${pkgJson.name} build script must include "yarn lint"`);
+      if (overwrite && pkgJson.scripts?.build) {
+        pkgJson.scripts.build = `yarn lint && ${pkgJson.scripts.build}`;
+      }
+    }
+  }
+
+  // Enforce clean script uses premove.
+  const expectedClean = "premove dist-cjs dist-es dist-types *.tsbuildinfo";
+  if (pkgJson.scripts?.clean !== expectedClean) {
+    errors.push(`${pkgJson.name} scripts["clean"] must be "${expectedClean}"`);
+    if (overwrite) {
+      pkgJson.scripts = pkgJson.scripts || {};
+      pkgJson.scripts.clean = expectedClean;
+    }
+  }
+
+  // Enforce stage-release script uses premove.
+  const expectedStageRelease =
+    "premove .release && yarn pack && mkdir ./.release && tar zxvf ./package.tgz --directory ./.release && rm ./package.tgz";
+  if (pkgJson.scripts?.["stage-release"] !== expectedStageRelease) {
+    errors.push(`${pkgJson.name} scripts["stage-release"] must be "${expectedStageRelease}"`);
+    if (overwrite) {
+      pkgJson.scripts = pkgJson.scripts || {};
+      pkgJson.scripts["stage-release"] = expectedStageRelease;
+    }
+  }
+
+  // Enforce premove devDependency.
+  if (pkgJson.devDependencies?.premove !== "4.0.0") {
+    errors.push(`${pkgJson.name} devDependencies["premove"] must be "4.0.0"`);
+    if (overwrite) {
+      pkgJson.devDependencies = pkgJson.devDependencies || {};
+      pkgJson.devDependencies.premove = "4.0.0";
+    }
+  }
+  if (pkgJson.dependencies?.premove) {
+    errors.push(`${pkgJson.name} premove must be in devDependencies, not dependencies`);
+    if (overwrite) {
+      delete pkgJson.dependencies.premove;
+    }
+  }
+
+  // Ensure :watch variants exist for vitest-based test scripts.
+  if (pkgJson.scripts) {
+    const watchPairs = [
+      ["test", "test:watch"],
+      ["test:integration", "test:integration:watch"],
+      ["test:e2e", "test:e2e:watch"],
+    ];
+    for (const [base, watch] of watchPairs) {
+      const cmd = pkgJson.scripts[base];
+      if (cmd && cmd.includes("vitest") && cmd.includes("run")) {
+        const isCompounded = cmd.includes("&&");
+        const expected = cmd.split("&&")[0].trim().replace("vitest run", "vitest watch");
+        if (!pkgJson.scripts[watch]) {
+          if (isCompounded) {
+            errors.push(
+              `${pkgJson.name} scripts["${watch}"] is missing and base command is compounded — resolve manually`
+            );
+          } else {
+            errors.push(`${pkgJson.name} ${watch} script was missing. Added automatically. Commit changes.`);
+            if (overwrite) {
+              pkgJson.scripts[watch] = expected;
+            }
+          }
+        } else if (pkgJson.scripts[watch].includes("vitest watch")) {
+          const afterWatch = pkgJson.scripts[watch].split("vitest watch")[1];
+          if (afterWatch.includes("&&")) {
+            errors.push(
+              `${pkgJson.name} scripts["${watch}"] has unreachable commands after vitest watch — resolve manually`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  // Alphabetize scripts when running locally (not in CodeBuild).
+  // Exception: "foo:watch" always immediately follows "foo".
+  if (!process.env.CODEBUILD_BUILD_ID && pkgJson.scripts) {
+    const sorted = Object.keys(pkgJson.scripts).sort(sortScripts);
+    if (JSON.stringify(Object.keys(pkgJson.scripts)) !== JSON.stringify(sorted)) {
+      const reordered = {};
+      for (const k of sorted) {
+        reordered[k] = pkgJson.scripts[k];
+      }
+      pkgJson.scripts = reordered;
+      if (overwrite) {
+        fs.writeFileSync(pkgJsonFilePath, JSON.stringify(pkgJson, null, 2) + "\n");
       }
     }
   }

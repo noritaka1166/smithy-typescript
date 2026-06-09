@@ -1,13 +1,13 @@
-import { toUint8Array } from "@smithy/util-utf8";
-import { afterEach, beforeEach, describe, expect,test as it, vi } from "vitest";
-import { gzip } from "zlib";
+import { gzip } from "node:zlib";
+import { toUint8Array } from "@smithy/core/serde";
+import { afterEach, beforeEach, describe, expect, test as it, vi } from "vitest";
 
 import { compressString } from "./compressString";
 
 const compressionSuffix = "compressed";
 const compressionSeparator = ".";
 
-vi.mock("@smithy/util-utf8");
+vi.mock("@smithy/core/serde");
 vi.mock("util", () => ({ promisify: vi.fn().mockImplementation((fn) => fn) }));
 vi.mock("zlib", () => ({
   gzip: vi.fn().mockImplementation((data) => [data, compressionSuffix].join(compressionSeparator)),
@@ -17,7 +17,7 @@ describe(compressString.name, () => {
   const testData = "test";
 
   beforeEach(() => {
-    (vi.mocked(toUint8Array)).mockImplementation((data: any) => data);
+    vi.mocked(toUint8Array).mockImplementation((data: any) => data);
   });
 
   afterEach(() => {
@@ -39,7 +39,7 @@ describe(compressString.name, () => {
   it("should throw an error if compression fails", async () => {
     const compressionErrorMsg = "compression error message";
     const compressionError = new Error(compressionErrorMsg);
-    ((gzip as unknown) as any).mockImplementationOnce(() => {
+    (gzip as unknown as any).mockImplementationOnce(() => {
       throw compressionError;
     });
 

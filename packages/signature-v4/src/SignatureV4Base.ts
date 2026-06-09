@@ -1,3 +1,6 @@
+import { normalizeProvider } from "@smithy/core/client";
+import { escapeUri } from "@smithy/core/protocols";
+import { toHex, toUint8Array } from "@smithy/core/serde";
 import type {
   AwsCredentialIdentity,
   ChecksumConstructor,
@@ -7,10 +10,6 @@ import type {
   HttpRequest,
   Provider,
 } from "@smithy/types";
-import { toHex } from "@smithy/util-hex-encoding";
-import { normalizeProvider } from "@smithy/util-middleware";
-import { escapeUri } from "@smithy/util-uri-escape";
-import { toUint8Array } from "@smithy/util-utf8";
 
 import { getCanonicalQuery } from "./getCanonicalQuery";
 import { iso8601 } from "./utilDate";

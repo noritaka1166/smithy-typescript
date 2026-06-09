@@ -1,5 +1,5 @@
 import { setFeature } from "@smithy/core";
-import { HttpRequest } from "@smithy/protocol-http";
+import { HttpRequest } from "@smithy/core/protocols";
 import type {
   AbsoluteLocation,
   BuildHandler,
@@ -14,8 +14,7 @@ import type {
 import { compressStream } from "./compressStream";
 import { compressString } from "./compressString";
 import type { CompressionPreviouslyResolved, CompressionResolvedConfig } from "./configurations";
-import type { CompressionAlgorithm } from "./constants";
-import { CLIENT_SUPPORTED_ALGORITHMS } from "./constants";
+import { CLIENT_SUPPORTED_ALGORITHMS, type CompressionAlgorithm } from "./constants";
 import { isStreaming } from "./isStreaming";
 
 /**

@@ -1,5 +1,31 @@
 # Change Log
 
+## 4.14.3
+
+### Patch Changes
+
+- 776bc52: update adaptive rate limiter to execute directly prior to outgoing requests & retries
+
+## 4.14.2
+
+### Patch Changes
+
+- cf00244: fix(types): exclude SharedArrayBuffer from recursive type transform
+
+## 4.14.1
+
+### Patch Changes
+
+- 131fce4: add eventStream indicator signal for NodeHttp2ConnectionManager so it does not reuse connections for event streams
+- 52b4789: allow snapshot of credentials for event-stream signing
+
+## 4.14.0
+
+### Minor Changes
+
+- cffd868: Introduce default retry behavior modifications slated for 2026. They are:
+  less time between server error retries, but slightly more time between throttling errors. Lower retry capacity consumption for throttling, and improved parsing of the retry-after and x-amz-retry-after headers.
+
 ## 4.13.1
 
 ### Patch Changes

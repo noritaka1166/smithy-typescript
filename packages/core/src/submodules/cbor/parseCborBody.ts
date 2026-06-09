@@ -1,16 +1,14 @@
-import { collectBody } from "@smithy/core/protocols";
-import { HttpRequest as __HttpRequest } from "@smithy/protocol-http";
+import { HttpRequest as __HttpRequest, collectBody } from "@smithy/core/protocols";
+import { calculateBodyLength } from "@smithy/core/serde";
 import type {
-  HeaderBag as __HeaderBag,
   HttpResponse,
-  SerdeContext as __SerdeContext,
   SerdeContext,
+  HeaderBag as __HeaderBag,
+  SerdeContext as __SerdeContext,
 } from "@smithy/types";
-import { calculateBodyLength } from "@smithy/util-body-length-browser";
 
 import { cbor } from "./cbor";
-import type { tagSymbol } from "./cbor-types";
-import { tag } from "./cbor-types";
+import { tag, type tagSymbol } from "./cbor-types";
 
 /**
  * @internal
@@ -75,7 +73,13 @@ export const loadSmithyRpcV2CborErrorCode = (output: HttpResponse, data: any): s
     return sanitizeErrorCode(data["__type"]);
   }
 
-  const codeKey = Object.keys(data).find((key) => key.toLowerCase() === "code");
+  let codeKey: string | undefined;
+  for (const key in data) {
+    if (key.toLowerCase() === "code") {
+      codeKey = key;
+      break;
+    }
+  }
   if (codeKey && data[codeKey] !== undefined) {
     return sanitizeErrorCode(data[codeKey]);
   }
@@ -117,8 +121,8 @@ export const buildHttpRpcRequest = async (
     contents.hostname = resolvedHostname;
   }
   if (endpoint.headers) {
-    for (const [name, value] of Object.entries(endpoint.headers)) {
-      contents.headers[name] = value;
+    for (const name in endpoint.headers) {
+      contents.headers[name] = endpoint.headers[name];
     }
   }
   if (body !== undefined) {

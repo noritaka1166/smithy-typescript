@@ -1,5 +1,34 @@
 # Change Log
 
+## 4.2.16
+
+### Patch Changes
+
+- Updated dependencies [776bc52]
+  - @smithy/types@4.14.3
+
+## 4.2.15
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+
+## 4.2.14
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+
+## 4.2.13
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+
 ## 4.2.12
 
 ### Patch Changes

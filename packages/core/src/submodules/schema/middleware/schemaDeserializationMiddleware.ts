@@ -1,4 +1,4 @@
-import { HttpResponse } from "@smithy/protocol-http";
+import { HttpResponse, getSmithyContext } from "@smithy/core/transport";
 import type {
   DeserializeHandler,
   DeserializeHandlerArguments,
@@ -6,7 +6,6 @@ import type {
   MetadataBearer,
   StaticOperationSchema,
 } from "@smithy/types";
-import { getSmithyContext } from "@smithy/util-middleware";
 
 import { operation } from "../schemas/operation";
 import type { PreviouslyResolved } from "./schema-middleware-types";
@@ -74,10 +73,10 @@ export const schemaDeserializationMiddleware =
           // if the deserializer failed, then $metadata may still be set
           // by taking information from the response.
           if (HttpResponse.isInstance(response)) {
-            const { headers = {} } = response;
+            const { headers = {}, statusCode } = response;
             const headerEntries = Object.entries(headers);
             (error as MetadataBearer).$metadata = {
-              httpStatusCode: response.statusCode,
+              httpStatusCode: statusCode,
               requestId: findHeader(/^x-[\w-]+-request-?id$/, headerEntries),
               extendedRequestId: findHeader(/^x-[\w-]+-id-2$/, headerEntries),
               cfId: findHeader(/^x-[\w-]+-cf-id$/, headerEntries),

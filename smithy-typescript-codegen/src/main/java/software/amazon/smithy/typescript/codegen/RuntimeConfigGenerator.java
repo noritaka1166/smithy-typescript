@@ -51,12 +51,17 @@ final class RuntimeConfigGenerator {
         },
         "sha256",
         writer -> {
-            writer.addImport("Hash", null, TypeScriptDependency.AWS_SDK_HASH_NODE);
+            writer.addImportSubmodule("Hash", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.SERDE);
             writer.write("Hash.bind(null, \"sha256\")");
         },
         "bodyLengthChecker",
         writer -> {
-            writer.addImport("calculateBodyLength", null, TypeScriptDependency.AWS_SDK_UTIL_BODY_LENGTH_NODE);
+            writer.addImportSubmodule(
+                "calculateBodyLength",
+                null,
+                TypeScriptDependency.SMITHY_CORE,
+                SmithyCoreSubmodules.SERDE
+            );
             writer.write("calculateBodyLength");
         },
         "streamCollector",
@@ -78,7 +83,12 @@ final class RuntimeConfigGenerator {
         },
         "bodyLengthChecker",
         writer -> {
-            writer.addImport("calculateBodyLength", null, TypeScriptDependency.AWS_SDK_UTIL_BODY_LENGTH_BROWSER);
+            writer.addImportSubmodule(
+                "calculateBodyLength",
+                null,
+                TypeScriptDependency.SMITHY_CORE,
+                SmithyCoreSubmodules.SERDE
+            );
             writer.write("calculateBodyLength");
         },
         "streamCollector",
@@ -97,12 +107,12 @@ final class RuntimeConfigGenerator {
     private final Map<String, Consumer<TypeScriptWriter>> sharedRuntimeConfigDefaults = MapUtils.of(
         "base64Decoder",
         writer -> {
-            writer.addImport("fromBase64", null, TypeScriptDependency.AWS_SDK_UTIL_BASE64);
+            writer.addImportSubmodule("fromBase64", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.SERDE);
             writer.write("fromBase64");
         },
         "base64Encoder",
         writer -> {
-            writer.addImport("toBase64", null, TypeScriptDependency.AWS_SDK_UTIL_BASE64);
+            writer.addImportSubmodule("toBase64", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.SERDE);
             writer.write("toBase64");
         },
         "disableHostPrefix",
@@ -111,17 +121,18 @@ final class RuntimeConfigGenerator {
         },
         "urlParser",
         writer -> {
-            writer.addImport("parseUrl", null, TypeScriptDependency.AWS_SDK_URL_PARSER);
+            writer
+                .addImportSubmodule("parseUrl", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.PROTOCOLS);
             writer.write("parseUrl");
         },
         "utf8Decoder",
         writer -> {
-            writer.addImport("fromUtf8", null, TypeScriptDependency.AWS_SDK_UTIL_UTF8);
+            writer.addImportSubmodule("fromUtf8", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.SERDE);
             writer.write("fromUtf8");
         },
         "utf8Encoder",
         writer -> {
-            writer.addImport("toUtf8", null, TypeScriptDependency.AWS_SDK_UTIL_UTF8);
+            writer.addImportSubmodule("toUtf8", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.SERDE);
             writer.write("toUtf8");
         },
         "extensions",
@@ -220,7 +231,12 @@ final class RuntimeConfigGenerator {
                         "getSharedRuntimeConfig",
                         Paths.get(".", CodegenUtils.SOURCE_FOLDER, "runtimeConfig.shared")
                     );
-                    writer.addImport("loadConfigsForDefaultMode", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                    writer.addImportSubmodule(
+                        "loadConfigsForDefaultMode",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CLIENT
+                    );
                     break;
                 default:
                     break;
@@ -228,18 +244,25 @@ final class RuntimeConfigGenerator {
 
             switch (target) {
                 case NODE -> {
-                    writer.addImport("emitWarningIfUnsupportedVersion", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
-                    writer.addImport(
+                    writer.addImportSubmodule(
+                        "emitWarningIfUnsupportedVersion",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CLIENT
+                    );
+                    writer.addImportSubmodule(
                         "resolveDefaultsModeConfig",
                         null,
-                        TypeScriptDependency.AWS_SDK_UTIL_DEFAULTS_MODE_NODE
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CONFIG
                     );
                 }
                 case BROWSER -> {
-                    writer.addImport(
+                    writer.addImportSubmodule(
                         "resolveDefaultsModeConfig",
                         null,
-                        TypeScriptDependency.AWS_SDK_UTIL_DEFAULTS_MODE_BROWSER
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CONFIG
                     );
                 }
                 case REACT_NATIVE -> {

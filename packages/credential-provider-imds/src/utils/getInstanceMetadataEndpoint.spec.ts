@@ -1,5 +1,5 @@
-import { loadConfig } from "@smithy/node-config-provider";
-import { parseUrl } from "@smithy/url-parser";
+import { loadConfig } from "@smithy/core/config";
+import { parseUrl } from "@smithy/core/protocols";
 import { afterEach, beforeEach, describe, expect, test as it, vi } from "vitest";
 
 import { Endpoint } from "../config/Endpoint";
@@ -8,8 +8,8 @@ import { EndpointMode } from "../config/EndpointMode";
 import { ENDPOINT_MODE_CONFIG_OPTIONS } from "../config/EndpointModeConfigOptions";
 import { getInstanceMetadataEndpoint } from "./getInstanceMetadataEndpoint";
 
-vi.mock("@smithy/node-config-provider");
-vi.mock("@smithy/url-parser");
+vi.mock("@smithy/core/config");
+vi.mock("@smithy/core/protocols");
 
 describe(getInstanceMetadataEndpoint.name, () => {
   let mockURL: string;

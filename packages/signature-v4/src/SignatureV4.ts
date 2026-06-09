@@ -1,3 +1,4 @@
+import { toHex, toUint8Array } from "@smithy/core/serde";
 import type {
   AwsCredentialIdentity,
   EventSigner,
@@ -5,6 +6,7 @@ import type {
   FormattedEvent,
   HttpRequest,
   MessageSigner,
+  MessageSigningArguments,
   RequestPresigner,
   RequestPresigningArguments,
   RequestSigner,
@@ -14,9 +16,9 @@ import type {
   SigningArguments,
   StringSigner,
 } from "@smithy/types";
-import { toHex } from "@smithy/util-hex-encoding";
-import { toUint8Array } from "@smithy/util-utf8";
 
+import { HeaderFormatter } from "./HeaderFormatter";
+import { SignatureV4Base, type SignatureV4CryptoInit, type SignatureV4Init } from "./SignatureV4Base";
 import {
   ALGORITHM_IDENTIFIER,
   ALGORITHM_QUERY_PARAM,
@@ -36,12 +38,9 @@ import {
 import { createScope, getSigningKey } from "./credentialDerivation";
 import { getCanonicalHeaders } from "./getCanonicalHeaders";
 import { getPayloadHash } from "./getPayloadHash";
-import { HeaderFormatter } from "./HeaderFormatter";
 import { hasHeader } from "./headerUtil";
 import { moveHeadersToQuery } from "./moveHeadersToQuery";
 import { prepareRequest } from "./prepareRequest";
-import type { SignatureV4CryptoInit, SignatureV4Init } from "./SignatureV4Base";
-import { SignatureV4Base } from "./SignatureV4Base";
 
 /**
  * @public
@@ -118,7 +117,7 @@ export class SignatureV4
 
   public async sign(stringToSign: string, options?: SigningArguments): Promise<string>;
   public async sign(event: FormattedEvent, options: EventSigningArguments): Promise<string>;
-  public async sign(event: SignableMessage, options: SigningArguments): Promise<SignedMessage>;
+  public async sign(event: SignableMessage, options: MessageSigningArguments): Promise<SignedMessage>;
   public async sign(requestToSign: HttpRequest, options?: RequestSigningArguments): Promise<HttpRequest>;
   public async sign(toSign: any, options: any): Promise<any> {
     if (typeof toSign === "string") {
@@ -134,7 +133,13 @@ export class SignatureV4
 
   private async signEvent(
     { headers, payload }: FormattedEvent,
-    { signingDate = new Date(), priorSignature, signingRegion, signingService }: EventSigningArguments
+    {
+      signingDate = new Date(),
+      priorSignature,
+      signingRegion,
+      signingService,
+      eventStreamCredentials,
+    }: EventSigningArguments
   ): Promise<string> {
     const region = signingRegion ?? (await this.regionProvider());
     const { shortDate, longDate } = this.formatDate(signingDate);
@@ -151,12 +156,17 @@ export class SignatureV4
       hashedHeaders,
       hashedPayload,
     ].join("\n");
-    return this.signString(stringToSign, { signingDate, signingRegion: region, signingService });
+    return this.signString(stringToSign, {
+      signingDate,
+      signingRegion: region,
+      signingService,
+      eventStreamCredentials,
+    });
   }
 
   async signMessage(
     signableMessage: SignableMessage,
-    { signingDate = new Date(), signingRegion, signingService }: SigningArguments
+    { signingDate = new Date(), signingRegion, signingService, eventStreamCredentials }: MessageSigningArguments
   ): Promise<SignedMessage> {
     const promise = this.signEvent(
       {
@@ -168,6 +178,7 @@ export class SignatureV4
         signingRegion,
         signingService,
         priorSignature: signableMessage.priorSignature,
+        eventStreamCredentials,
       }
     );
 
@@ -178,9 +189,14 @@ export class SignatureV4
 
   private async signString(
     stringToSign: string,
-    { signingDate = new Date(), signingRegion, signingService }: SigningArguments = {}
+    {
+      signingDate = new Date(),
+      signingRegion,
+      signingService,
+      eventStreamCredentials,
+    }: SigningArguments & Partial<EventSigningArguments> = {}
   ): Promise<string> {
-    const credentials = await this.credentialProvider();
+    const credentials = eventStreamCredentials ?? (await this.credentialProvider());
     this.validateResolvedCredentials(credentials);
     const region = signingRegion ?? (await this.regionProvider());
     const { shortDate } = this.formatDate(signingDate);

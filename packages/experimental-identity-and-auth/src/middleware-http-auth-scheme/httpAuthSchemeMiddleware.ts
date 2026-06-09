@@ -1,12 +1,12 @@
+import { getSmithyContext } from "@smithy/core/client";
 import type {
   HandlerExecutionContext,
+  SMITHY_CONTEXT_KEY,
   SerializeHandler,
   SerializeHandlerArguments,
   SerializeHandlerOutput,
   SerializeMiddleware,
-  SMITHY_CONTEXT_KEY,
 } from "@smithy/types";
-import { getSmithyContext } from "@smithy/util-middleware";
 
 import type { HttpAuthScheme, HttpAuthSchemeId, SelectedHttpAuthScheme } from "../HttpAuthScheme";
 import type {
@@ -52,8 +52,9 @@ interface HttpAuthSchemeMiddlewareHandlerExecutionContext extends HandlerExecuti
 }
 
 /**
- * @internal
  * Later HttpAuthSchemes with the same HttpAuthSchemeId will overwrite previous ones.
+ *
+ * @internal
  */
 function convertHttpAuthSchemesToMap(httpAuthSchemes: HttpAuthScheme[]): Map<HttpAuthSchemeId, HttpAuthScheme> {
   const map = new Map();

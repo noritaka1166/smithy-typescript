@@ -1,7 +1,7 @@
-import { cbor, CborCodec, dateToTag } from "@smithy/core/cbor";
+import { CborCodec, cbor, dateToTag } from "@smithy/core/cbor";
+import { HttpResponse } from "@smithy/core/protocols";
 import { NormalizedSchema } from "@smithy/core/schema";
-import { EventStreamMarshaller } from "@smithy/eventstream-serde-node";
-import { HttpResponse } from "@smithy/protocol-http";
+import { fromUtf8, toUtf8 } from "@smithy/core/serde";
 import type {
   BlobSchema,
   BooleanSchema,
@@ -12,10 +12,10 @@ import type {
   StringSchema,
   TimestampEpochSecondsSchema,
 } from "@smithy/types";
-import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 import { describe, expect, test as it } from "vitest";
 
 import { EventStreamSerde } from "./EventStreamSerde";
+import { EventStreamMarshaller } from "./eventstream-serde/EventStreamMarshaller";
 
 describe(EventStreamSerde.name, () => {
   describe("event stream serde", () => {

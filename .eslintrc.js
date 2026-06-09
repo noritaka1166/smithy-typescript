@@ -8,7 +8,7 @@ module.exports = {
     // Uses the recommended rules from the @typescript-eslint/eslint-plugin
     "plugin:@typescript-eslint/recommended",
   ],
-  plugins: ["@typescript-eslint", "simple-import-sort"],
+  plugins: ["@typescript-eslint", "n"],
   rules: {
     /** Turn off strict enforcement */
     "@typescript-eslint/ban-types": "off",
@@ -33,14 +33,58 @@ module.exports = {
     "@typescript-eslint/no-namespace": "warn",
 
     /** Errors */
-    "simple-import-sort/imports": "error",
     "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/no-import-type-side-effects": "error",
+    "n/prefer-node-protocol": "error",
   },
   overrides: [
     {
       files: ["packages/*/src/**/*.ts"],
       excludedFiles: ["packages/*/src/**/*.spec.ts"],
       rules: {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "http",
+                importNames: ["Agent", "ClientRequest", "CloseEvent", "IncomingMessage", "METHODS", "MessageEvent", "OutgoingMessage", "STATUS_CODES", "Server", "ServerResponse", "WebSocket", "_connectionListener", "createServer", "get", "globalAgent", "maxHeaderSize", "request", "setMaxIdleHTTPParsers", "validateHeaderName", "validateHeaderValue"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+              {
+                name: "node:http",
+                importNames: ["Agent", "ClientRequest", "CloseEvent", "IncomingMessage", "METHODS", "MessageEvent", "OutgoingMessage", "STATUS_CODES", "Server", "ServerResponse", "WebSocket", "_connectionListener", "createServer", "get", "globalAgent", "maxHeaderSize", "request", "setMaxIdleHTTPParsers", "validateHeaderName", "validateHeaderValue"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+              {
+                name: "https",
+                importNames: ["Agent", "Server", "createServer", "get", "globalAgent", "request"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+              {
+                name: "node:https",
+                importNames: ["Agent", "Server", "createServer", "get", "globalAgent", "request"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+              {
+                name: "http2",
+                importNames: ["Http2ServerRequest", "Http2ServerResponse", "connect", "constants", "createSecureServer", "createServer", "getDefaultSettings", "getPackedSettings", "getUnpackedSettings", "performServerHandshake", "sensitiveHeaders"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+              {
+                name: "node:http2",
+                importNames: ["Http2ServerRequest", "Http2ServerResponse", "connect", "constants", "createSecureServer", "createServer", "getDefaultSettings", "getPackedSettings", "getUnpackedSettings", "performServerHandshake", "sensitiveHeaders"],
+                allowTypeImports: true,
+                message: "Use a default import so runtime HTTP request interception keeps working.",
+              },
+            ],
+          },
+        ],
         "no-restricted-imports": [
           "error",
           {
@@ -48,10 +92,109 @@ module.exports = {
               {
                 group: ["*src*", "*dist-*"],
               },
+              {
+                group: [
+                  "@smithy/util-hex-encoding",
+                  "@smithy/util-base64",
+                  "@smithy/util-body-length-browser",
+                  "@smithy/util-body-length-node",
+                  "@smithy/util-utf8",
+                  "@smithy/util-buffer-from",
+                  "@smithy/is-array-buffer",
+                  "@smithy/middleware-serde",
+                  "@smithy/hash-node",
+                  "@smithy/hash-blob-browser",
+                  "@smithy/hash-stream-node",
+                  "@smithy/md5-js",
+                  "@smithy/chunked-blob-reader",
+                  "@smithy/chunked-blob-reader-native",
+                  "@smithy/util-stream",
+                  "@smithy/uuid",
+                ],
+                message: "This package has been consolidated into @smithy/core/serde.",
+              },
+              {
+                group: [
+                  "@smithy/smithy-client",
+                  "@smithy/middleware-stack",
+                  "@smithy/util-middleware",
+                  "@smithy/invalid-dependency",
+                  "@smithy/util-waiter",
+                ],
+                message: "This package has been consolidated into @smithy/core/client.",
+              },
+              {
+                group: [
+                  "@smithy/config-resolver",
+                  "@smithy/util-config-provider",
+                  "@smithy/node-config-provider",
+                  "@smithy/shared-ini-file-loader",
+                  "@smithy/property-provider",
+                  "@smithy/util-defaults-mode-browser",
+                  "@smithy/util-defaults-mode-node",
+                ],
+                message: "This package has been consolidated into @smithy/core/config.",
+              },
+              {
+                group: [
+                  "@smithy/protocol-http",
+                  "@smithy/middleware-content-length",
+                  "@smithy/util-uri-escape",
+                  "@smithy/querystring-builder",
+                  "@smithy/querystring-parser",
+                  "@smithy/url-parser",
+                ],
+                message: "This package has been consolidated into @smithy/core/protocols.",
+              },
+              {
+                group: ["@smithy/util-retry", "@smithy/middleware-retry", "@smithy/service-error-classification"],
+                message: "This package has been consolidated into @smithy/core/retry.",
+              },
+              {
+                group: ["@smithy/util-endpoints", "@smithy/middleware-endpoint"],
+                message: "This package has been consolidated into @smithy/core/endpoints.",
+              },
+              {
+                group: [
+                  "@smithy/hash-blob-browser",
+                  "@smithy/hash-stream-node",
+                  "@smithy/md5-js",
+                  "@smithy/chunked-blob-reader",
+                  "@smithy/chunked-blob-reader-native",
+                ],
+                message: "This package has been consolidated into @smithy/core/checksum.",
+              },
+              {
+                group: [
+                  "@smithy/eventstream-codec",
+                  "@smithy/eventstream-serde-universal",
+                  "@smithy/eventstream-serde-browser",
+                  "@smithy/eventstream-serde-node",
+                  "@smithy/eventstream-serde-config-resolver",
+                ],
+                message: "This package has been consolidated into @smithy/core/event-streams.",
+              },
             ],
           },
         ],
-      }
+      },
+    },
+    {
+      files: ["packages/*/src/**/*.ts"],
+      excludedFiles: ["packages/core/src/**/*.ts", "packages/*/src/**/*.spec.ts"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["@smithy/core/transport"],
+                message: "@smithy/core/transport is internal to @smithy/core. Import from the public submodule that re-exports it (e.g. @smithy/core/protocols, @smithy/core/client, @smithy/core/endpoints).",
+              },
+            ],
+          },
+        ],
+      },
     },
   ],
 };

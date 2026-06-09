@@ -1,6 +1,6 @@
+import { getSmithyContext } from "@smithy/core/client";
 import { RpcProtocol } from "@smithy/core/protocols";
-import { TypeRegistry } from "@smithy/core/schema";
-import { deref, NormalizedSchema } from "@smithy/core/schema";
+import { NormalizedSchema, TypeRegistry, deref } from "@smithy/core/schema";
 import type {
   EndpointBearer,
   HandlerExecutionContext,
@@ -12,7 +12,6 @@ import type {
   SerdeFunctions,
   StaticErrorSchema,
 } from "@smithy/types";
-import { getSmithyContext } from "@smithy/util-middleware";
 
 import { CborCodec } from "./CborCodec";
 import { loadSmithyRpcV2CborErrorCode } from "./parseCborBody";
@@ -142,7 +141,7 @@ export class SmithyRpcV2CborProtocol extends RpcProtocol {
     const ns = NormalizedSchema.of(errorSchema);
     const ErrorCtor = registry.getErrorCtor(errorSchema);
     const message = dataObject.message ?? dataObject.Message ?? "Unknown";
-    const exception = new ErrorCtor(message);
+    const exception = new ErrorCtor({});
 
     const output = {} as any;
     for (const [name, member] of ns.structIterator()) {

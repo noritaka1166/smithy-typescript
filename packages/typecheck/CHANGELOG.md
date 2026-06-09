@@ -1,5 +1,113 @@
 # Change Log
 
+## 1.1.6
+
+### Patch Changes
+
+- Updated dependencies [776bc52]
+- Updated dependencies [5b92a54]
+  - @smithy/types@4.14.3
+  - @smithy/core@3.24.6
+
+## 1.1.5
+
+### Patch Changes
+
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
+
+## 1.1.4
+
+### Patch Changes
+
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
+
+## 1.1.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+  - @smithy/core@3.24.3
+
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+
+## 1.1.0
+
+### Minor Changes
+
+- f21bf6b: consolidate packages into core/client
+
+### Patch Changes
+
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0
+
+## 1.0.25
+
+### Patch Changes
+
+- @smithy/core@3.23.17
+
+## 1.0.24
+
+### Patch Changes
+
+- Updated dependencies [a029f0e]
+  - @smithy/core@3.23.16
+
+## 1.0.23
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+  - @smithy/core@3.23.15
+  - @smithy/util-middleware@4.2.14
+
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/core@3.23.14
+  - @smithy/util-middleware@4.2.13
+
+## 1.0.21
+
+### Patch Changes
+
+- Updated dependencies [7198e09]
+  - @smithy/core@3.23.13
+
 ## 1.0.20
 
 ### Patch Changes

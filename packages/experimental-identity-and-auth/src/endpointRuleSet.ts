@@ -1,7 +1,6 @@
-import type { EndpointParameterInstructions } from "@smithy/middleware-endpoint";
-import { resolveParams } from "@smithy/middleware-endpoint";
+import { getSmithyContext } from "@smithy/core/client";
+import { resolveParams, type EndpointParameterInstructions } from "@smithy/core/endpoints";
 import type { EndpointParameters, EndpointV2, HandlerExecutionContext, Logger } from "@smithy/types";
-import { getSmithyContext } from "@smithy/util-middleware";
 
 import type { HttpAuthOption } from "./HttpAuthScheme";
 import type {

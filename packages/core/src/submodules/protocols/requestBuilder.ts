@@ -1,11 +1,12 @@
-import { HttpRequest } from "@smithy/protocol-http";
+import { HttpRequest } from "@smithy/core/transport";
 import type { SerdeContext } from "@smithy/types";
 
 import { resolvedPath } from "./resolve-path";
 
 /**
- * @internal
  * used in code-generated serde.
+ *
+ * @internal
  */
 export function requestBuilder(input: any, context: SerdeContext): RequestBuilder {
   return new RequestBuilder(input, context);

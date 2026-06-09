@@ -1,6 +1,6 @@
-import { type TypeRegistry, NormalizedSchema, translateTraits } from "@smithy/core/schema";
-import { splitEvery, splitHeader } from "@smithy/core/serde";
-import { HttpRequest } from "@smithy/protocol-http";
+import { NormalizedSchema, translateTraits, type TypeRegistry } from "@smithy/core/schema";
+import { sdkStreamMixin, splitEvery, splitHeader } from "@smithy/core/serde";
+import { HttpRequest } from "@smithy/core/transport";
 import type {
   DocumentSchema,
   Endpoint,
@@ -15,11 +15,10 @@ import type {
   StaticStructureSchema,
   TimestampDefaultSchema,
 } from "@smithy/types";
-import { sdkStreamMixin } from "@smithy/util-stream";
 
+import { HttpProtocol } from "./HttpProtocol";
 import { collectBody } from "./collect-stream-body";
 import { extendedEncodeURIComponent } from "./extended-encode-uri-component";
-import { HttpProtocol } from "./HttpProtocol";
 
 /**
  * Base for HTTP-binding protocols. Downstream examples
@@ -75,7 +74,9 @@ export abstract class HttpBindingProtocol extends HttpProtocol {
           request.path += path;
         }
         const traitSearchParams = new URLSearchParams(search ?? "");
-        Object.assign(query, Object.fromEntries(traitSearchParams));
+        for (const [key, value] of traitSearchParams) {
+          query[key] = value;
+        }
       }
     }
 
@@ -134,7 +135,8 @@ export abstract class HttpBindingProtocol extends HttpProtocol {
         serializer.write(memberNs, inputMemberValue);
         headers[memberTraits.httpHeader.toLowerCase() as string] = String(serializer.flush());
       } else if (typeof memberTraits.httpPrefixHeaders === "string") {
-        for (const [key, val] of Object.entries(inputMemberValue)) {
+        for (const key in inputMemberValue) {
+          const val = inputMemberValue[key];
           const amalgam = memberTraits.httpPrefixHeaders + key;
           serializer.write([memberNs.getValueSchema(), { httpHeader: amalgam }], val);
           headers[amalgam.toLowerCase()] = serializer.flush() as string;
@@ -185,8 +187,9 @@ export abstract class HttpBindingProtocol extends HttpProtocol {
     const traits = ns.getMergedTraits();
 
     if (traits.httpQueryParams) {
-      for (const [key, val] of Object.entries(data)) {
+      for (const key in data) {
         if (!(key in query)) {
+          const val = data[key];
           const valueSchema = ns.getValueSchema();
           Object.assign(valueSchema.getMergedTraits(), {
             // We pass on the traits to the sub-schema
@@ -357,8 +360,9 @@ export abstract class HttpBindingProtocol extends HttpProtocol {
         }
       } else if (memberTraits.httpPrefixHeaders !== undefined) {
         dataObject[memberName] = {};
-        for (const [header, value] of Object.entries(response.headers)) {
+        for (const header in response.headers) {
           if (header.startsWith(memberTraits.httpPrefixHeaders)) {
+            const value = response.headers[header];
             const valueSchema = memberSchema.getValueSchema();
             valueSchema.getMergedTraits().httpHeader = header;
             dataObject[memberName][header.slice(memberTraits.httpPrefixHeaders.length)] = await deserializer.read(

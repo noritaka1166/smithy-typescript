@@ -1,19 +1,5 @@
-import { nv } from "@smithy/core/serde";
-import { toUtf8 } from "@smithy/util-utf8";
+import { nv, toUtf8 } from "@smithy/core/serde";
 
-import type {
-  CborArgumentLength,
-  CborArgumentLengthOffset,
-  CborListType,
-  CborMapType,
-  CborOffset,
-  CborUnstructuredByteStringType,
-  CborValueType,
-  Float32,
-  Uint8,
-  Uint32,
-  Uint64,
-} from "./cbor-types";
 import {
   alloc,
   extendedFloat16,
@@ -33,6 +19,17 @@ import {
   specialTrue,
   specialUndefined,
   tag,
+  type CborArgumentLength,
+  type CborArgumentLengthOffset,
+  type CborListType,
+  type CborMapType,
+  type CborOffset,
+  type CborUnstructuredByteStringType,
+  type CborValueType,
+  type Float32,
+  type Uint8,
+  type Uint32,
+  type Uint64,
 } from "./cbor-types";
 
 const USE_TEXT_DECODER = typeof TextDecoder !== "undefined";
@@ -48,10 +45,10 @@ const textDecoder = USE_TEXT_DECODER ? new TextDecoder() : null;
 let _offset: CborOffset = 0;
 
 /**
+ * Sets the decode bytearray source and its data view.
+ *
  * @internal
  * @param bytes - to be set as the decode source.
- *
- * Sets the decode bytearray source and its data view.
  */
 export function setPayload(bytes: Uint8Array) {
   payload = bytes;
@@ -59,8 +56,9 @@ export function setPayload(bytes: Uint8Array) {
 }
 
 /**
- * @internal
  * Decodes the data between the two indices.
+ *
+ * @internal
  */
 export function decode(at: Uint32, to: Uint32): CborValueType {
   if (at >= to) {

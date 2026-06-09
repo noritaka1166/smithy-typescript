@@ -43,17 +43,19 @@ content-type: application/cbor
 
 [Uint8Array (cbor object view)]
 {
+  "Message": "__Message__",
   "__type": "smithy.protocoltests.rpcv2Cbor#InvalidGreeting"
 }
 
 [actual bytes]
-161, 102, 95, 95, 116, 121, 112, 101, 120, 46, 115, 109, 105, 116, 104, 121, 46, 112, 114, 111, 116, 111, 99, 111,
-108, 116, 101, 115, 116, 115, 46, 114, 112, 99, 118, 50, 67, 98, 111, 114, 35, 73, 110, 118, 97, 108, 105, 100,
-71, 114, 101, 101, 116, 105, 110, 103
+162, 103, 77, 101, 115, 115, 97, 103, 101, 107, 95, 95, 77, 101, 115, 115, 97, 103, 101, 95, 95, 102, 95, 95,
+116, 121, 112, 101, 120, 46, 115, 109, 105, 116, 104, 121, 46, 112, 114, 111, 116, 111, 99, 111, 108, 116, 101, 115,
+116, 115, 46, 114, 112, 99, 118, 50, 67, 98, 111, 114, 35, 73, 110, 118, 97, 108, 105, 100, 71, 114, 101, 101,
+116, 105, 110, 103
 
 
 --- [error name & message] ---
-InvalidGreeting: Unknown
+InvalidGreeting: __Message__
 
 --- [error object] ---
 {
@@ -68,8 +70,8 @@ InvalidGreeting: Unknown
     totalRetryDelay: (number) 0
   },
   name: "InvalidGreeting",
-  Message: (undefined),
-  message: "Unknown"
+  Message: "__Message__",
+  message: "__Message__"
 }
 
 ======================== frontend error ========================
@@ -86,6 +88,7 @@ Unknown:
 
 --- [error object] ---
 {
+  0: (number) 110,
   $fault: "client",
   $retryable: (undefined),
   $metadata: {
@@ -93,8 +96,8 @@ Unknown:
     requestId: (undefined),
     extendedRequestId: (undefined),
     cfId: (undefined),
-    attempts: (number) 3,
-    totalRetryDelay: (number) 75
+    attempts: (number) 1,
+    totalRetryDelay: (number) 0
   },
   name: "Unknown"
 }

@@ -1,84 +1,67 @@
-# Change Log
+# @smithy/is-array-buffer
 
-## 4.2.2
-
-### Patch Changes
-
-- a4d95e6: Set downlevel types to be used in typescript@'<4.5'
-
-## 4.2.1
+## 4.3.6
 
 ### Patch Changes
 
-- 03c3dc8: update for rollup build externalLiveBindings=false
+- Updated dependencies [776bc52]
+- Updated dependencies [5b92a54]
+  - @smithy/core@3.24.6
 
-## 4.2.0
-
-### Minor Changes
-
-- 45ee67f: update dist-cjs generation to use rollup
-
-## 4.1.0
-
-### Minor Changes
-
-- 64cda93: set sideEffects bundler metadata
-
-## 4.0.0
-
-### Major Changes
-
-- 20d99be: major version bump for dropping node16 support
-
-## 3.0.0
-
-### Major Changes
-
-- 671aa704: update to node16 minimum
-
-## 2.2.0
-
-### Minor Changes
-
-- 38f9a61f: Update package dependencies
-
-## 2.1.1
+## 4.3.5
 
 ### Patch Changes
 
-- 2b1bf055: generate dist-cjs with runtime list of export names for esm
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
 
-## 2.1.0
-
-### Minor Changes
-
-- 9939f823: bundle dist-cjs index
-
-## 2.0.0
-
-### Major Changes
-
-- 9d53bc76: update to 2.x major versions
-
-## 1.1.0
-
-### Minor Changes
-
-- e3cbb3cc: set types to the 1.x line
-
-## 1.0.2
+## 4.3.4
 
 ### Patch Changes
 
-- 6e312329: restore downlevel types
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
 
-## 1.0.1
+## 4.3.3
 
 ### Patch Changes
 
-- 2c57033f: Set correct publishConfig directory
+- @smithy/core@3.24.3
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+## 4.3.2
 
-See [@aws-sdk/is-array-buffer](https://github.com/aws/aws-sdk-js-v3/blob/main/packages/is-array-buffer/CHANGELOG.md) for additional history.
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+
+## 4.3.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+
+## 4.3.0
+
+### Minor Changes
+
+- 8963b91: consolidate packages into core/serde
+
+### Patch Changes
+
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0

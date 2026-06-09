@@ -29,6 +29,7 @@ import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.EventHeaderTrait;
 import software.amazon.smithy.model.traits.EventPayloadTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.TypeScriptWriter;
 import software.amazon.smithy.typescript.codegen.integration.ProtocolGenerator.GenerationContext;
@@ -363,7 +364,12 @@ public class EventStreamGenerator {
             Shape target = model.expectShape(headerMember.getTarget());
             writer.openBlock("if (input.$L != null) {", "}", memberName, () -> {
                 if (target.isLongShape()) {
-                    writer.addImport("Int64", "__Int64", TypeScriptDependency.AWS_SDK_EVENTSTREAM_CODEC);
+                    writer.addImportSubmodule(
+                        "Int64",
+                        "__Int64",
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.EVENT_STREAMS
+                    );
                     writer.write(
                         "headers[$1S] = { type: $2S, value: __Int64.fromNumber(input.$1L) }",
                         memberName,
@@ -437,7 +443,12 @@ public class EventStreamGenerator {
                     boolean mayElide = serdeElisionIndex.mayElide(payloadShape);
                     documentShapesToSerialize.add(payloadShape);
                     if (mayElide) {
-                        writer.addImport("_json", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                        writer.addImportSubmodule(
+                            "_json",
+                            null,
+                            TypeScriptDependency.SMITHY_CORE,
+                            SmithyCoreSubmodules.CLIENT
+                        );
                         writer.write("body = $L(input.$L);", "_json", payloadMemberName);
                     } else {
                         writer.write("body = $L(input.$L, context);", serFunctionName, payloadMemberName);
@@ -464,7 +475,7 @@ public class EventStreamGenerator {
             documentShapesToSerialize.add(event);
             boolean mayElide = serdeElisionIndex.mayElide(event);
             if (mayElide) {
-                writer.addImport("_json", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                writer.addImportSubmodule("_json", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.CLIENT);
                 writer.write("body = $L(input);", "_json");
             } else {
                 writer.write("body = $L(input, context);", serFunctionName);
@@ -627,7 +638,12 @@ public class EventStreamGenerator {
                 String deserFunctionName = ProtocolGenerator.getDeserFunctionShortName(symbol);
                 boolean mayElide = serdeElisionEnabled && serdeElisionIndex.mayElide(payloadShape);
                 if (mayElide) {
-                    writer.addImport("_json", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                    writer.addImportSubmodule(
+                        "_json",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CLIENT
+                    );
                     writer.write("contents.$L = $L(data);", payloadMemberName, "_json");
                 } else {
                     writer.write("contents.$L = $L(data, context);", payloadMemberName, deserFunctionName);
@@ -640,7 +656,7 @@ public class EventStreamGenerator {
             String deserFunctionName = ProtocolGenerator.getDeserFunctionShortName(symbol);
             boolean mayElide = serdeElisionEnabled && serdeElisionIndex.mayElide(event);
             if (mayElide) {
-                writer.addImport("_json", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                writer.addImportSubmodule("_json", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.CLIENT);
                 writer.write("Object.assign(contents, $L(data));", "_json");
             } else {
                 writer.write("Object.assign(contents, $L(data, context));", deserFunctionName);

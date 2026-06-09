@@ -6,9 +6,8 @@ import {
   ENV_CMDS_RELATIVE_URI,
   fromContainerMetadata,
 } from "./fromContainerMetadata";
+import { fromImdsCredentials, type ImdsCredentials } from "./remoteProvider/ImdsCredentials";
 import { httpRequest } from "./remoteProvider/httpRequest";
-import type { ImdsCredentials } from "./remoteProvider/ImdsCredentials";
-import { fromImdsCredentials } from "./remoteProvider/ImdsCredentials";
 
 const mockHttpRequest = <any>httpRequest;
 vi.mock("./remoteProvider/httpRequest");
@@ -144,6 +143,32 @@ describe("fromContainerMetadata", () => {
 
     it("should reject the promise with a terminal error if a unexpected protocol is specified", async () => {
       process.env[ENV_CMDS_FULL_URI] = "wss://localhost:8080/path";
+
+      await fromContainerMetadata()().then(
+        () => {
+          throw new Error("The promise should have been rejected");
+        },
+        (err) => {
+          expect((err as any).tryNextLink).toBeFalsy();
+        }
+      );
+    });
+
+    it("should reject the promise with a terminal error if the URL is malformed", async () => {
+      process.env[ENV_CMDS_FULL_URI] = "not a valid url";
+
+      await fromContainerMetadata()().then(
+        () => {
+          throw new Error("The promise should have been rejected");
+        },
+        (err) => {
+          expect((err as any).tryNextLink).toBeFalsy();
+        }
+      );
+    });
+
+    it("should reject the promise when hostname matches an Object.prototype property", async () => {
+      process.env[ENV_CMDS_FULL_URI] = "http://constructor/path";
 
       await fromContainerMetadata()().then(
         () => {

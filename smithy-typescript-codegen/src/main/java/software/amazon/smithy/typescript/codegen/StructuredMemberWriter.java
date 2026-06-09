@@ -35,6 +35,7 @@ import software.amazon.smithy.model.traits.PatternTrait;
 import software.amazon.smithy.model.traits.RangeTrait;
 import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.SensitiveTrait;
+import software.amazon.smithy.model.traits.SparseTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.model.traits.Trait;
 import software.amazon.smithy.model.traits.UniqueItemsTrait;
@@ -170,7 +171,12 @@ final class StructuredMemberWriter {
         if (!isServerSdk) {
             writer.writeDocs("@internal");
         }
-        writer.addTypeImport("ExceptionOptionType", "__ExceptionOptionType", TypeScriptDependency.AWS_SMITHY_CLIENT);
+        writer.addTypeImportSubmodule(
+            "ExceptionOptionType",
+            "__ExceptionOptionType",
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.CLIENT
+        );
         writer.openBlock("constructor(opts: __ExceptionOptionType<$L, __BaseException>) {", symbol.getName());
         writer.openBlock("super({", "});", () -> {
             writer.write("name: $S,", shape.getId().getName());
@@ -191,7 +197,12 @@ final class StructuredMemberWriter {
      * Writes SENSITIVE_STRING to hide the value of sensitive members.
      */
     private void writeSensitiveString(TypeScriptWriter writer) {
-        writer.addImport("SENSITIVE_STRING", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+        writer.addImportSubmodule(
+            "SENSITIVE_STRING",
+            null,
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.CLIENT
+        );
         writer.write("SENSITIVE_STRING");
     }
 
@@ -479,6 +490,8 @@ final class StructuredMemberWriter {
             return;
         }
 
+        boolean sparse = shape.hasTrait(SparseTrait.ID);
+
         if (shape.isStructureShape() || shape.isUnionShape()) {
             writer.addImport(
                 "CompositeStructureValidator",
@@ -512,7 +525,7 @@ final class StructuredMemberWriter {
             MemberShape collectionMemberShape = ((CollectionShape) shape).getMember();
             Shape collectionMemberTargetShape = model.expectShape(collectionMemberShape.getTarget());
             writer.openBlock(
-                "new __CompositeCollectionValidator<$T>(",
+                "new __CompositeCollectionValidator<$T" + (sparse ? " | null>(" : ">("),
                 ")" + trailer,
                 getValidatorValueType(shape),
                 () -> {
@@ -531,21 +544,26 @@ final class StructuredMemberWriter {
             MapShape mapShape = (MapShape) shape;
             final MemberShape keyShape = mapShape.getKey();
             final MemberShape valueShape = mapShape.getValue();
-            writer.openBlock("new __CompositeMapValidator<$T>(", ")" + trailer, getValidatorValueType(shape), () -> {
-                writeShapeValidator(writer, mapShape, constraintTraits, ",");
-                writeMemberValidator(
-                    writer,
-                    model.expectShape(keyShape.getTarget()),
-                    getConstraintTraits(keyShape),
-                    ","
-                );
-                writeMemberValidator(
-                    writer,
-                    model.expectShape(valueShape.getTarget()),
-                    getConstraintTraits(valueShape),
-                    ""
-                );
-            });
+            writer.openBlock(
+                "new __CompositeMapValidator<$T" + (sparse ? " | null>(" : ">("),
+                ")" + trailer,
+                getValidatorValueType(shape),
+                () -> {
+                    writeShapeValidator(writer, mapShape, constraintTraits, ",");
+                    writeMemberValidator(
+                        writer,
+                        model.expectShape(keyShape.getTarget()),
+                        getConstraintTraits(keyShape),
+                        ","
+                    );
+                    writeMemberValidator(
+                        writer,
+                        model.expectShape(valueShape.getTarget()),
+                        getConstraintTraits(valueShape),
+                        ""
+                    );
+                }
+            );
         } else {
             throw new IllegalArgumentException(
                 String.format("Unsupported shape found when generating validator: %s", shape)
@@ -664,25 +682,30 @@ final class StructuredMemberWriter {
      * type arg for MultiConstraintValidator.
      */
     private void writeConstraintValidatorType(TypeScriptWriter writer, Shape shape) {
+        boolean sparse = shape.hasTrait(SparseTrait.ID);
+
         if (shape.isStructureShape() || shape.isUnionShape()) {
             writer.writeInline("$T", symbolProvider.toSymbol(shape));
         } else if (shape.isListShape() || shape.isSetShape()) {
             MemberShape collectionMemberShape = ((CollectionShape) shape).getMember();
             Shape collectionMemberTargetShape = model.expectShape(collectionMemberShape.getTarget());
-            writer.writeInline("Iterable<$T>", getSymbolForValidatedType(collectionMemberTargetShape));
+            writer.writeInline(
+                "Iterable<$T" + (sparse ? " | null>" : ">"),
+                getSymbolForValidatedType(collectionMemberTargetShape)
+            );
         } else if (shape.isMapShape()) {
             MapShape mapShape = shape.asMapShape().get();
             String keyType = getSymbolForValidatedType(mapShape.getKey()).toString();
 
             if (keyType.equals("string")) {
                 writer.writeInline(
-                    "Record<$T, $T>",
+                    "Record<$T, $T" + (sparse ? " | null>" : ">"),
                     getSymbolForValidatedType(mapShape.getKey()),
                     getSymbolForValidatedType(mapShape.getValue())
                 );
             } else {
                 writer.writeInline(
-                    "Partial<Record<$T, $T>>",
+                    "Partial<Record<$T, $T" + (sparse ? " | null>>" : ">>"),
                     getSymbolForValidatedType(mapShape.getKey()),
                     getSymbolForValidatedType(mapShape.getValue())
                 );

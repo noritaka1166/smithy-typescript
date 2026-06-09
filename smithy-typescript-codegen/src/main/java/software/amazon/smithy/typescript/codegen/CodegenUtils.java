@@ -246,8 +246,13 @@ public final class CodegenUtils {
         String memberName = payloadMember.getMemberName();
         String optionalSuffix = payloadMember.isRequired() ? "" : "?";
 
-        writer.addImport("Uint8ArrayBlobAdapter", null, TypeScriptDependency.UTIL_STREAM);
-        writer.addDependency(TypeScriptDependency.UTIL_STREAM);
+        writer.addImportSubmodule(
+            "Uint8ArrayBlobAdapter",
+            null,
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.SERDE
+        );
+        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
 
         writer.writeDocs("@public");
         writer.write(
@@ -294,6 +299,8 @@ public final class CodegenUtils {
                     }
                 } else if (value instanceof String) {
                     functionParametersList.add(String.format("%s: '%s'", key, value));
+                } else if (value instanceof Number) {
+                    functionParametersList.add(String.format("%s: %s", key, value));
                 } else if (value instanceof Boolean) {
                     functionParametersList.add(String.format("%s: %s", key, value));
                 } else if (value instanceof List) {

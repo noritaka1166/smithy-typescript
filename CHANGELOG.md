@@ -1,12 +1,52 @@
 # Smithy Typescript Codegen Changelog
 
+[Commit logs](https://github.com/smithy-lang/smithy-typescript/commits/main/smithy-typescript-codegen)
+
+## 0.50.0 (2026-05-29)
+
+### Bug Fixes
+
+- Excluded RequestCompressionTrait from schema generation ([#2056](https://github.com/smithy-lang/smithy-typescript/pull/2056))
+- Corrected import source of strictParseFloat ([#2014](https://github.com/smithy-lang/smithy-typescript/pull/2014))
+- Corrected source package for compression plugin ([#2013](https://github.com/smithy-lang/smithy-typescript/pull/2013))
+
+### Chores
+
+- Updated smithyVersion to 1.71.0 ([#2055](https://github.com/smithy-lang/smithy-typescript/pull/2055))
+- Consolidated event-streams packages ([#2003](https://github.com/smithy-lang/smithy-typescript/pull/2003))
+- Consolidated retry packages ([#2002](https://github.com/smithy-lang/smithy-typescript/pull/2002))
+- Moved checksums from serde to new submodule ([#2000](https://github.com/smithy-lang/smithy-typescript/pull/2000))
+- Consolidated protocols packages ([#1998](https://github.com/smithy-lang/smithy-typescript/pull/1998))
+- Consolidated config packages ([#1992](https://github.com/smithy-lang/smithy-typescript/pull/1992))
+- Consolidated client packages ([#1991](https://github.com/smithy-lang/smithy-typescript/pull/1991))
+- Consolidated serde packages ([#1985](https://github.com/smithy-lang/smithy-typescript/pull/1985))
+
+## 0.49.1 (2026-04-30)
+
+### Bug Fixes
+
+- Fixed compression edge case in Endpoint BDD generation ([#1989](https://github.com/smithy-lang/smithy-typescript/pull/1989))
+
+## 0.49.0 (2026-04-28)
+
+### Features
+
+- Endpoint logic is now generated as a compact binary decision diagram ([#1948](https://github.com/smithy-lang/smithy-typescript/pull/1948))
+- Waiters are generated with typed final result values ([#1852](https://github.com/smithy-lang/smithy-typescript/pull/1852))
+
+## 0.48.0 (2026-04-08)
+
+### Features
+
+- Generated nullable types for sparse collections ([#1943](https://github.com/smithy-lang/smithy-typescript/pull/1943))
+- Enabled type-only symbols in Schema mode ([#1938](https://github.com/smithy-lang/smithy-typescript/pull/1938))
+
 ## 0.47.0 (2026-03-17)
 
 ### Features
 
 - Added `versionScheme` option for automatic versioning of generated packages ([#1914](https://github.com/smithy-lang/smithy-typescript/pull/1914))
 - (experimental) Added option to generate request/response/error snapshots from service models ([#7788](https://github.com/aws/aws-sdk-js-v3/issues/7788))
-
 
 ## 0.46.0 (2026-03-05)
 

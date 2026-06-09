@@ -1,12 +1,10 @@
+import { readableStreamToIterable } from "@smithy/core/event-streams";
+
+/** @deprecated Use @smithy/core/event-streams instead. */
+export { EventStreamMarshaller, eventStreamSerdeProvider, iterableToReadableStream } from "@smithy/core/event-streams";
+export type { EventStreamMarshallerOptions } from "@smithy/core/event-streams";
+
 /**
- * @internal
+ * @deprecated capitalization typo.
  */
-export * from "./EventStreamMarshaller";
-/**
- * @internal
- */
-export * from "./provider";
-/**
- * @internal
- */
-export * from "./utils";
+export const readableStreamtoIterable = readableStreamToIterable;

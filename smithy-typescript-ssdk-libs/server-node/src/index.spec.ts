@@ -3,12 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { mkdtemp } from "fs/promises";
-import type { IncomingMessage, RequestOptions, Server, ServerResponse } from "http";
-import { createServer, request } from "http";
-import * as os from "os";
-import * as path from "path";
-import type { Readable } from "stream";
+import { mkdtemp } from "node:fs/promises";
+import {
+  createServer,
+  request,
+  type IncomingMessage,
+  type RequestOptions,
+  type Server,
+  type ServerResponse,
+} from "node:http";
+import * as os from "node:os";
+import * as path from "node:path";
+import type { Readable } from "node:stream";
 
 import { convertRequest } from "./node";
 

@@ -1,8 +1,5 @@
-import type { HttpHandler, HttpRequest } from "@smithy/protocol-http";
-import { HttpResponse } from "@smithy/protocol-http";
-import { buildQueryString } from "@smithy/querystring-builder";
-import type { FetchHttpHandlerOptions } from "@smithy/types";
-import type { HeaderBag, HttpHandlerOptions, Provider } from "@smithy/types";
+import { HttpResponse, buildQueryString, type HttpHandler, type HttpRequest } from "@smithy/core/protocols";
+import type { FetchHttpHandlerOptions, HeaderBag, HttpHandlerOptions, Provider } from "@smithy/types";
 
 import { createRequest } from "./create-request";
 import { requestTimeout as requestTimeoutFn } from "./request-timeout";
@@ -15,8 +12,9 @@ declare let AbortController: any;
 export { FetchHttpHandlerOptions };
 
 /**
- * @internal
  * Detection of keepalive support. Can be overridden for testing.
+ *
+ * @internal
  */
 export const keepAliveSupport = {
   supported: undefined as undefined | boolean,
@@ -33,9 +31,9 @@ export type AdditionalRequestParameters = {
 };
 
 /**
- * @public
- *
  * HttpHandler implementation using browsers' `fetch` global function.
+ *
+ * @public
  */
 export class FetchHttpHandler implements HttpHandler<FetchHttpHandlerOptions> {
   private config?: FetchHttpHandlerOptions;

@@ -1,5 +1,110 @@
 # Change Log
 
+## 3.24.6
+
+### Patch Changes
+
+- 776bc52: update adaptive rate limiter to execute directly prior to outgoing requests & retries
+- 5b92a54: Treat the Node.js DNS error code EAI_AGAIN as a transient (retryable) error
+- Updated dependencies [776bc52]
+  - @smithy/types@4.14.3
+
+## 3.24.5
+
+### Patch Changes
+
+- 721fbed: remove and prevent circular file-level dependencies
+
+## 3.24.4
+
+### Patch Changes
+
+- 9eaa5c6: add bundler compatibility for tsup
+
+## 3.24.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+
+## 3.24.2
+
+### Patch Changes
+
+- 6d4eb8a: fix for browser utf8 variant not to include Buffer (Node.js)
+
+## 3.24.1
+
+### Patch Changes
+
+- 2dc5cf6: fix for uuid generation in Node.js 18.x
+- 1d0ff86: retrieve schemas with matching shape name if unambiguous
+
+## 3.24.0
+
+### Minor Changes
+
+- 540aeb4: consolidate core/retry and related cleanup
+- 4f30af1: consolidation for core/protocols
+- 8963b91: consolidate packages into core/serde
+- 9194e9f: consolidate into core/endpoints
+- 7ec62a0: fix browser bundler metadata for @smithy/core
+- 62fed78: package consolidation for core/config
+- cad44fc: consolidate core/event-streams
+- f21bf6b: consolidate packages into core/client
+
+### Patch Changes
+
+- ee92b6b: move core/serde checksum components to core/checksum
+- 0be0b36: clean up exported API surface
+- fb323fb: avoid sideEffects in core submodule indices
+- 545589a: Avoid throwing from waiter 403 warning checks when no responses have been observed.
+- 7fd6ac0: export surface equality for core, Node.js/browser/react-native
+
+## 3.23.17
+
+### Patch Changes
+
+- @smithy/util-stream@4.5.25
+
+## 3.23.16
+
+### Patch Changes
+
+- a029f0e: Reduce intermediate allocations in hot paths
+  - @smithy/util-stream@4.5.24
+
+## 3.23.15
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+  - @smithy/util-stream@4.5.23
+  - @smithy/protocol-http@5.3.14
+  - @smithy/url-parser@4.2.14
+  - @smithy/util-middleware@4.2.14
+
+## 3.23.14
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/protocol-http@5.3.13
+  - @smithy/url-parser@4.2.13
+  - @smithy/util-middleware@4.2.13
+  - @smithy/util-stream@4.5.22
+
+## 3.23.13
+
+### Patch Changes
+
+- 7198e09: Remove unnecessary shallow copy of input object and delete operations in `HttpBindingProtocol.serializeRequest` and `RpcProtocol.serializeRequest`. The body serializer is schema-driven and only reads members listed in the payload schema, making the spread and deletes redundant. This eliminates an O(n) copy and 5 delete operations per request.
+  - @smithy/util-stream@4.5.21
+
 ## 3.23.12
 
 ### Patch Changes

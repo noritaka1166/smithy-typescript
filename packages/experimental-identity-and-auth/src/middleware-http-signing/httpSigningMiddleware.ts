@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { HttpRequest } from "@smithy/protocol-http";
+import { getSmithyContext } from "@smithy/core/client";
+import { HttpRequest } from "@smithy/core/protocols";
 import type {
   FinalizeHandler,
   FinalizeHandlerArguments,
@@ -8,7 +9,6 @@ import type {
   HandlerExecutionContext,
   SMITHY_CONTEXT_KEY,
 } from "@smithy/types";
-import { getSmithyContext } from "@smithy/util-middleware";
 
 import type { SelectedHttpAuthScheme } from "../HttpAuthScheme";
 

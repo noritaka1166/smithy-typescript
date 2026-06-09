@@ -1,12 +1,13 @@
-import type { StreamCollector } from "@smithy/types";
 import type { Readable } from "node:stream";
 import type { ReadableStream as IReadableStream } from "node:stream/web";
+import type { StreamCollector } from "@smithy/types";
 
 import { Collector } from "./collector";
 
 /**
- * @internal
  * Converts a stream to a byte array.
+ *
+ * @internal
  */
 export const streamCollector: StreamCollector = (stream: Readable | IReadableStream): Promise<Uint8Array> => {
   if (isReadableStreamInstance(stream)) {

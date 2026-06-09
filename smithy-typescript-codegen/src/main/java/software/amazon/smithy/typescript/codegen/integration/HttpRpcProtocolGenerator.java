@@ -19,6 +19,7 @@ import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.EndpointTrait;
 import software.amazon.smithy.typescript.codegen.ApplicationProtocol;
 import software.amazon.smithy.typescript.codegen.CodegenUtils;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.TypeScriptWriter;
 import software.amazon.smithy.typescript.codegen.knowledge.SerdeElisionIndex;
@@ -123,7 +124,12 @@ public abstract class HttpRpcProtocolGenerator implements ProtocolGenerator {
         TypeScriptWriter writer = context.getWriter();
 
         if (context.getSettings().generateClient()) {
-            writer.addImport("withBaseException", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+            writer.addImportSubmodule(
+                "withBaseException",
+                null,
+                TypeScriptDependency.SMITHY_CORE,
+                SmithyCoreSubmodules.CLIENT
+            );
             SymbolReference exception = HttpProtocolGeneratorUtils.getClientBaseException(context);
             writer.write("const throwDefaultError = withBaseException($T);", exception);
         }
@@ -177,8 +183,18 @@ public abstract class HttpRpcProtocolGenerator implements ProtocolGenerator {
 
         writer.write(context.getStringStore().flushVariableDeclarationCode());
 
-        writer.addImport("HttpRequest", "__HttpRequest", TypeScriptDependency.PROTOCOL_HTTP);
-        writer.addImport("HttpResponse", "__HttpResponse", TypeScriptDependency.PROTOCOL_HTTP);
+        writer.addImportSubmodule(
+            "HttpRequest",
+            "__HttpRequest",
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.PROTOCOLS
+        );
+        writer.addImportSubmodule(
+            "HttpResponse",
+            "__HttpResponse",
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.PROTOCOLS
+        );
     }
 
     @Override
@@ -536,7 +552,12 @@ public abstract class HttpRpcProtocolGenerator implements ProtocolGenerator {
                 }
 
                 if (SerdeElisionIndex.of(context.getModel()).mayElide(error) && enableSerdeElision()) {
-                    writer.addImport("_json", null, TypeScriptDependency.AWS_SMITHY_CLIENT);
+                    writer.addImportSubmodule(
+                        "_json",
+                        null,
+                        TypeScriptDependency.SMITHY_CORE,
+                        SmithyCoreSubmodules.CLIENT
+                    );
                     writer.write("const deserialized: any = _json($L);", getErrorBodyLocation(context, "body"));
                 } else {
                     writer.write(
@@ -552,10 +573,11 @@ public abstract class HttpRpcProtocolGenerator implements ProtocolGenerator {
                     writer.write("$$metadata: deserializeMetadata($L),", outputReference);
                     writer.write("...deserialized");
                 });
-                writer.addImport(
+                writer.addImportSubmodule(
                     "decorateServiceException",
                     "__decorateServiceException",
-                    TypeScriptDependency.AWS_SMITHY_CLIENT
+                    TypeScriptDependency.SMITHY_CORE,
+                    SmithyCoreSubmodules.CLIENT
                 );
                 writer.write("return __decorateServiceException(exception, body);");
             }

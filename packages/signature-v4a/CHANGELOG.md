@@ -1,5 +1,104 @@
 # @smithy/signature-v4a
 
+## 3.2.7
+
+### Patch Changes
+
+- 9655299: update stale package repository url
+- (carried over from 3.2.6)
+  - Updated dependencies [776bc52]
+  - Updated dependencies [5b92a54]
+    - @smithy/types@4.14.3
+    - @smithy/core@3.24.6
+    - @smithy/signature-v4@5.4.6
+
+## 3.2.6
+
+This version failed to publish, and changes were rolled into 3.2.7.
+
+## 3.2.5
+
+### Patch Changes
+
+- Updated dependencies [721fbed]
+  - @smithy/core@3.24.5
+  - @smithy/signature-v4@5.4.5
+
+## 3.2.4
+
+### Patch Changes
+
+- Updated dependencies [9eaa5c6]
+  - @smithy/core@3.24.4
+  - @smithy/signature-v4@5.4.4
+
+## 3.2.3
+
+### Patch Changes
+
+- Updated dependencies [cf00244]
+  - @smithy/types@4.14.2
+  - @smithy/core@3.24.3
+  - @smithy/signature-v4@5.4.3
+
+## 3.2.2
+
+### Patch Changes
+
+- Updated dependencies [6d4eb8a]
+  - @smithy/core@3.24.2
+  - @smithy/signature-v4@5.4.2
+
+## 3.2.1
+
+### Patch Changes
+
+- Updated dependencies [2dc5cf6]
+- Updated dependencies [1d0ff86]
+  - @smithy/core@3.24.1
+  - @smithy/signature-v4@5.4.1
+
+## 3.2.0
+
+### Minor Changes
+
+- 8963b91: consolidate packages into core/serde
+
+### Patch Changes
+
+- Updated dependencies [ee92b6b]
+- Updated dependencies [540aeb4]
+- Updated dependencies [0be0b36]
+- Updated dependencies [4f30af1]
+- Updated dependencies [8963b91]
+- Updated dependencies [fb323fb]
+- Updated dependencies [9194e9f]
+- Updated dependencies [7ec62a0]
+- Updated dependencies [62fed78]
+- Updated dependencies [cad44fc]
+- Updated dependencies [545589a]
+- Updated dependencies [f21bf6b]
+- Updated dependencies [7fd6ac0]
+  - @smithy/core@3.24.0
+  - @smithy/signature-v4@5.4.0
+
+## 3.1.14
+
+### Patch Changes
+
+- Updated dependencies [131fce4]
+- Updated dependencies [52b4789]
+  - @smithy/types@4.14.1
+  - @smithy/signature-v4@5.3.14
+
+## 3.1.13
+
+### Patch Changes
+
+- Updated dependencies [cffd868]
+  - @smithy/types@4.14.0
+  - @smithy/signature-v4@5.3.13
+
 ## 3.1.12
 
 ### Patch Changes

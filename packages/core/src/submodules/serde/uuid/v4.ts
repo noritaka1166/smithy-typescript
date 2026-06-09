@@ -1,0 +1,63 @@
+const decimalToHex = Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, "0"));
+
+/**
+ * @internal
+ */
+export type GetRandomValues = (array: Uint8Array) => Uint8Array;
+
+/**
+ * Creates a RFC4122 version 4 UUID generator.
+ *
+ * Uses the native crypto.randomUUID() if available, otherwise falls back
+ * to a manual implementation using the provided getRandomValues function.
+ *
+ * The fallback implementation:
+ * - Generates 16 random bytes using getRandomValues()
+ * - Sets the version bits to indicate version 4
+ * - Sets the variant bits to indicate RFC4122
+ * - Formats the bytes as a UUID string with dashes
+ *
+ * @param getRandomValues - platform-specific random byte source.
+ * @returns A function that generates version 4 UUID strings
+ * in the format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+ * where x is any hexadecimal digit and y is one of 8, 9, a, or b.
+ *
+ * @internal
+ */
+export function bindV4(getRandomValues: GetRandomValues) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return () => crypto.randomUUID();
+  }
+
+  return (): string => {
+    const rnds = new Uint8Array(16);
+    getRandomValues(rnds);
+
+    // Set version (4) and variant (RFC4122)
+    rnds[6] = (rnds[6] & 0x0f) | 0x40; // version 4
+    rnds[8] = (rnds[8] & 0x3f) | 0x80; // variant
+
+    return (
+      decimalToHex[rnds[0]] +
+      decimalToHex[rnds[1]] +
+      decimalToHex[rnds[2]] +
+      decimalToHex[rnds[3]] +
+      "-" +
+      decimalToHex[rnds[4]] +
+      decimalToHex[rnds[5]] +
+      "-" +
+      decimalToHex[rnds[6]] +
+      decimalToHex[rnds[7]] +
+      "-" +
+      decimalToHex[rnds[8]] +
+      decimalToHex[rnds[9]] +
+      "-" +
+      decimalToHex[rnds[10]] +
+      decimalToHex[rnds[11]] +
+      decimalToHex[rnds[12]] +
+      decimalToHex[rnds[13]] +
+      decimalToHex[rnds[14]] +
+      decimalToHex[rnds[15]]
+    );
+  };
+}

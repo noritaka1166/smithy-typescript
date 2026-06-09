@@ -6,6 +6,7 @@ package software.amazon.smithy.typescript.codegen.integration;
 
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.TypeScriptSettings;
 import software.amazon.smithy.typescript.codegen.TypeScriptWriter;
@@ -25,9 +26,13 @@ public class AddDefaultsModeDependency implements TypeScriptIntegration {
         TypeScriptWriter writer
     ) {
         // Dependencies used in the default runtime config template.
-        writer.addDependency(TypeScriptDependency.AWS_SDK_UTIL_DEFAULTS_MODE_BROWSER);
-        writer.addDependency(TypeScriptDependency.AWS_SDK_UTIL_DEFAULTS_MODE_NODE);
-        writer.addTypeImport("DefaultsMode", "__DefaultsMode", TypeScriptDependency.AWS_SMITHY_CLIENT);
+        writer.addDependency(TypeScriptDependency.SMITHY_CORE);
+        writer.addTypeImportSubmodule(
+            "DefaultsMode",
+            "__DefaultsMode",
+            TypeScriptDependency.SMITHY_CORE,
+            SmithyCoreSubmodules.CLIENT
+        );
         writer.addTypeImport("Provider", "__Provider", TypeScriptDependency.SMITHY_TYPES);
         writer.writeDocs(
             "The {@link @smithy/smithy-client#DefaultsMode} that " +

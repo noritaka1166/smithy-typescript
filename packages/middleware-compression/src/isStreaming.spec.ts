@@ -1,13 +1,13 @@
-import { isArrayBuffer } from "@smithy/is-array-buffer";
-import { afterEach, beforeEach, describe, expect,test as it, vi } from "vitest";
+import { isArrayBuffer } from "@smithy/core/serde";
+import { afterEach, beforeEach, describe, expect, test as it, vi } from "vitest";
 
 import { isStreaming } from "./isStreaming";
 
-vi.mock("@smithy/is-array-buffer");
+vi.mock("@smithy/core/serde");
 
 describe(isStreaming.name, () => {
   beforeEach(() => {
-    ((isArrayBuffer as unknown) as any).mockReturnValue(true);
+    (isArrayBuffer as unknown as any).mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -15,7 +15,7 @@ describe(isStreaming.name, () => {
   });
 
   it("returns true when body is a stream", () => {
-    ((isArrayBuffer as unknown) as any).mockReturnValue(false);
+    (isArrayBuffer as unknown as any).mockReturnValue(false);
     // Mocking {} as a stream
     const mockStream = {};
     expect(isStreaming(mockStream)).toBe(true);

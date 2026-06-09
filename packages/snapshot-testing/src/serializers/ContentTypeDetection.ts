@@ -1,7 +1,6 @@
 import { cbor } from "@smithy/core/cbor";
+import { fromUtf8, toBase64, toUtf8 } from "@smithy/core/serde";
 import type { HeaderBag } from "@smithy/types";
-import { toBase64 } from "@smithy/util-base64";
-import { fromUtf8, toUtf8 } from "@smithy/util-utf8";
 
 import { serializeBytes } from "./serializeBytes";
 

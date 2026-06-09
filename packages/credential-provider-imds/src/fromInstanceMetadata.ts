@@ -1,13 +1,11 @@
-import { loadConfig } from "@smithy/node-config-provider";
-import { CredentialsProviderError } from "@smithy/property-provider";
+import type { RequestOptions } from "node:http";
+import { CredentialsProviderError, loadConfig } from "@smithy/core/config";
 import type { AwsCredentialIdentity, Provider } from "@smithy/types";
-import type { RequestOptions } from "http";
 
 import { InstanceMetadataV1FallbackError } from "./error/InstanceMetadataV1FallbackError";
-import { httpRequest } from "./remoteProvider/httpRequest";
 import { fromImdsCredentials, isImdsCredentials } from "./remoteProvider/ImdsCredentials";
-import type { RemoteProviderInit } from "./remoteProvider/RemoteProviderInit";
-import { providerConfigFromInit } from "./remoteProvider/RemoteProviderInit";
+import { providerConfigFromInit, type RemoteProviderInit } from "./remoteProvider/RemoteProviderInit";
+import { httpRequest } from "./remoteProvider/httpRequest";
 import { retry } from "./remoteProvider/retry";
 import type { InstanceMetadataCredentials } from "./types";
 import { getInstanceMetadataEndpoint } from "./utils/getInstanceMetadataEndpoint";
@@ -20,10 +18,10 @@ const PROFILE_AWS_EC2_METADATA_V1_DISABLED = "ec2_metadata_v1_disabled";
 const X_AWS_EC2_METADATA_TOKEN = "x-aws-ec2-metadata-token";
 
 /**
- * @internal
- *
  * Creates a credential provider that will source credentials from the EC2
  * Instance Metadata Service
+ *
+ * @internal
  */
 export const fromInstanceMetadata = (init: RemoteProviderInit = {}): Provider<InstanceMetadataCredentials> =>
   staticStabilityProvider(getInstanceMetadataProvider(init), { logger: init.logger });

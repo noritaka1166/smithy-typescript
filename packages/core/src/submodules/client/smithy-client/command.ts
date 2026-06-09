@@ -1,0 +1,324 @@
+import type { HttpRequest } from "@smithy/core/transport";
+import {
+  SMITHY_CONTEXT_KEY,
+  type FinalizeHandlerArguments,
+  type Handler,
+  type HandlerExecutionContext,
+  type Command as ICommand,
+  type HttpRequest as IHttpRequest,
+  type HttpResponse as IHttpResponse,
+  type MiddlewareStack as IMiddlewareStack,
+  type Logger,
+  type MetadataBearer,
+  type Mutable,
+  type OperationSchema,
+  type OptionalParameter,
+  type Pluggable,
+  type RequestHandler,
+  type SerdeContext,
+  type StaticOperationSchema,
+} from "@smithy/types";
+
+import { constructStack } from "../middleware-stack/MiddlewareStack";
+import { schemaLogFilter } from "./schemaLogFilter";
+
+// EndpointParameterInstructions inlined to avoid circular dependency with @smithy/middleware-endpoint.
+type EndpointParameterInstructions = Record<string, unknown>;
+
+/**
+ * @public
+ */
+export abstract class Command<
+  Input extends ClientInput,
+  Output extends ClientOutput,
+  ResolvedClientConfiguration,
+  ClientInput extends object = any,
+  ClientOutput extends MetadataBearer = any,
+> implements ICommand<ClientInput, Input, ClientOutput, Output, ResolvedClientConfiguration>
+{
+  public abstract input: Input;
+  public readonly middlewareStack: IMiddlewareStack<Input, Output> = constructStack<Input, Output>();
+  public readonly schema?: OperationSchema | StaticOperationSchema;
+
+  /**
+   * Factory for Command ClassBuilder.
+   * @internal
+   */
+  public static classBuilder<
+    I extends SI,
+    O extends SO,
+    C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+    SI extends object = any,
+    SO extends MetadataBearer = any,
+  >() {
+    return new ClassBuilder<I, O, C, SI, SO>();
+  }
+
+  abstract resolveMiddleware(
+    stack: IMiddlewareStack<ClientInput, ClientOutput>,
+    configuration: ResolvedClientConfiguration,
+    options: any
+  ): Handler<Input, Output>;
+
+  /**
+   * @internal
+   */
+  public resolveMiddlewareWithContext(
+    clientStack: IMiddlewareStack<any, any>,
+    configuration: { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+    options: any,
+    {
+      middlewareFn,
+      clientName,
+      commandName,
+      inputFilterSensitiveLog,
+      outputFilterSensitiveLog,
+      smithyContext,
+      additionalContext,
+      CommandCtor,
+    }: ResolveMiddlewareContextArgs
+  ) {
+    for (const mw of middlewareFn.bind(this)(CommandCtor, clientStack, configuration, options)) {
+      this.middlewareStack.use(mw);
+    }
+    const stack = clientStack.concat(this.middlewareStack);
+    const { logger } = configuration;
+    const handlerExecutionContext: HandlerExecutionContext = {
+      logger,
+      clientName,
+      commandName,
+      inputFilterSensitiveLog,
+      outputFilterSensitiveLog,
+      [SMITHY_CONTEXT_KEY]: {
+        commandInstance: this,
+        ...smithyContext,
+      },
+      ...additionalContext,
+    };
+    const { requestHandler } = configuration;
+    let requestOptions = options ?? {};
+    if (smithyContext.eventStream) {
+      requestOptions = {
+        isEventStream: true,
+        ...requestOptions,
+      };
+    }
+    return stack.resolve(
+      (request: FinalizeHandlerArguments<any>) => requestHandler.handle(request.request as HttpRequest, requestOptions),
+      handlerExecutionContext
+    );
+  }
+}
+
+/**
+ * @internal
+ */
+type ResolveMiddlewareContextArgs = {
+  middlewareFn: (CommandCtor: any, clientStack: any, config: any, options: any) => Pluggable<any, any>[];
+  clientName: string;
+  commandName: string;
+  smithyContext: Record<string, unknown>;
+  additionalContext: HandlerExecutionContext;
+  inputFilterSensitiveLog: (_: any) => any;
+  outputFilterSensitiveLog: (_: any) => any;
+  CommandCtor: any /* Command constructor */;
+};
+
+/**
+ * @internal
+ */
+class ClassBuilder<
+  I extends SI,
+  O extends SO,
+  C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+  SI extends object = any,
+  SO extends MetadataBearer = any,
+> {
+  private _init: (_: Command<I, O, C, SI, SO>) => void = () => {};
+  private _ep: EndpointParameterInstructions = {};
+  private _middlewareFn: (CommandCtor: any, clientStack: any, config: any, options: any) => Pluggable<any, any>[] =
+    () => [];
+  private _commandName = "";
+  private _clientName = "";
+  private _additionalContext = {} as HandlerExecutionContext;
+  private _smithyContext = {} as Record<string, unknown>;
+  private _inputFilterSensitiveLog: any = undefined;
+  private _outputFilterSensitiveLog: any = undefined;
+  private _serializer: (input: I, context: SerdeContext | any) => Promise<IHttpRequest> = null as any;
+  private _deserializer: (output: IHttpResponse, context: SerdeContext | any) => Promise<O> = null as any;
+  private _operationSchema?: OperationSchema | StaticOperationSchema;
+
+  /**
+   * Optional init callback.
+   */
+  public init(cb: (_: Command<I, O, C, SI, SO>) => void) {
+    this._init = cb;
+  }
+  /**
+   * Set the endpoint parameter instructions.
+   */
+  public ep(endpointParameterInstructions: EndpointParameterInstructions): ClassBuilder<I, O, C, SI, SO> {
+    this._ep = endpointParameterInstructions;
+    return this;
+  }
+  /**
+   * Add any number of middleware.
+   */
+  public m(
+    middlewareSupplier: (CommandCtor: any, clientStack: any, config: any, options: any) => Pluggable<any, any>[]
+  ): ClassBuilder<I, O, C, SI, SO> {
+    this._middlewareFn = middlewareSupplier;
+    return this;
+  }
+  /**
+   * Set the initial handler execution context Smithy field.
+   */
+  public s(
+    service: string,
+    operation: string,
+    smithyContext: Record<string, unknown> = {}
+  ): ClassBuilder<I, O, C, SI, SO> {
+    this._smithyContext = {
+      service,
+      operation,
+      ...smithyContext,
+    };
+    return this;
+  }
+  /**
+   * Set the initial handler execution context.
+   */
+  public c(additionalContext: HandlerExecutionContext = {}): ClassBuilder<I, O, C, SI, SO> {
+    this._additionalContext = additionalContext;
+    return this;
+  }
+  /**
+   * Set constant string identifiers for the operation.
+   */
+  public n(clientName: string, commandName: string): ClassBuilder<I, O, C, SI, SO> {
+    this._clientName = clientName;
+    this._commandName = commandName;
+    return this;
+  }
+  /**
+   * Set the input and output sensistive log filters.
+   */
+  public f(
+    inputFilter: (_: any) => any = (_) => _,
+    outputFilter: (_: any) => any = (_) => _
+  ): ClassBuilder<I, O, C, SI, SO> {
+    this._inputFilterSensitiveLog = inputFilter;
+    this._outputFilterSensitiveLog = outputFilter;
+    return this;
+  }
+  /**
+   * Sets the serializer.
+   */
+  public ser(
+    serializer: (input: I, context?: SerdeContext | any) => Promise<IHttpRequest>
+  ): ClassBuilder<I, O, C, SI, SO> {
+    this._serializer = serializer;
+    return this;
+  }
+  /**
+   * Sets the deserializer.
+   */
+  public de(
+    deserializer: (output: IHttpResponse, context?: SerdeContext | any) => Promise<O>
+  ): ClassBuilder<I, O, C, SI, SO> {
+    this._deserializer = deserializer;
+    return this;
+  }
+
+  /**
+   * Sets input/output schema for the operation.
+   */
+  public sc(operation: OperationSchema | StaticOperationSchema): ClassBuilder<I, O, C, SI, SO> {
+    this._operationSchema = operation;
+    this._smithyContext.operationSchema = operation;
+    return this;
+  }
+
+  /**
+   * @returns a Command class with the classBuilder properties.
+   */
+  public build(): {
+    new (input: I): CommandImpl<I, O, C, SI, SO>;
+    new (...[input]: OptionalParameter<I>): CommandImpl<I, O, C, SI, SO>;
+    getEndpointParameterInstructions(): EndpointParameterInstructions;
+  } {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const closure = this;
+    let CommandRef: any;
+
+    return (CommandRef = class extends Command<I, O, C, SI, SO> {
+      public readonly input: I;
+
+      /**
+       * @public
+       */
+      public static getEndpointParameterInstructions(): EndpointParameterInstructions {
+        return closure._ep;
+      }
+
+      /**
+       * @public
+       */
+      public constructor(...[input]: OptionalParameter<I>) {
+        super();
+        this.input = input ?? ({} as unknown as I);
+        closure._init(this);
+        (this as Mutable<typeof this>).schema = closure._operationSchema;
+      }
+
+      /**
+       * @internal
+       */
+      public resolveMiddleware(stack: IMiddlewareStack<any, any>, configuration: C, options: any): Handler<any, any> {
+        const op = closure._operationSchema;
+        const input = (op as StaticOperationSchema)?.[4] ?? (op as OperationSchema)?.input;
+        const output = (op as StaticOperationSchema)?.[5] ?? (op as OperationSchema)?.output;
+
+        return this.resolveMiddlewareWithContext(stack, configuration, options, {
+          CommandCtor: CommandRef,
+          middlewareFn: closure._middlewareFn,
+          clientName: closure._clientName,
+          commandName: closure._commandName,
+          inputFilterSensitiveLog:
+            closure._inputFilterSensitiveLog ?? (op ? schemaLogFilter.bind(null, input) : (_) => _),
+          outputFilterSensitiveLog:
+            closure._outputFilterSensitiveLog ?? (op ? schemaLogFilter.bind(null, output) : (_) => _),
+          smithyContext: closure._smithyContext,
+          additionalContext: closure._additionalContext,
+        });
+      }
+
+      /**
+       * @internal
+       */
+      // @ts-ignore used in middlewareFn closure.
+      public serialize = closure._serializer;
+
+      /**
+       * @internal
+       */
+      // @ts-ignore used in middlewareFn closure.
+      public deserialize = closure._deserializer;
+    });
+  }
+}
+
+/**
+ * A concrete implementation of ICommand with no abstract members.
+ * @public
+ */
+export interface CommandImpl<
+  I extends SI,
+  O extends SO,
+  C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+  SI extends object = any,
+  SO extends MetadataBearer = any,
+> extends Command<I, O, C, SI, SO> {
+  readonly input: I;
+  resolveMiddleware(stack: IMiddlewareStack<SI, SO>, configuration: C, options: any): Handler<I, O>;
+}

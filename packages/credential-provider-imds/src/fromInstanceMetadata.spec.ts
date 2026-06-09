@@ -1,11 +1,11 @@
-import { CredentialsProviderError } from "@smithy/property-provider";
+import { CredentialsProviderError } from "@smithy/core/config";
 import { afterEach, beforeEach, describe, expect, test as it, vi } from "vitest";
 
 import { InstanceMetadataV1FallbackError } from "./error/InstanceMetadataV1FallbackError";
 import { fromInstanceMetadata } from "./fromInstanceMetadata";
-import { httpRequest } from "./remoteProvider/httpRequest";
 import { fromImdsCredentials, isImdsCredentials } from "./remoteProvider/ImdsCredentials";
 import { providerConfigFromInit } from "./remoteProvider/RemoteProviderInit";
+import { httpRequest } from "./remoteProvider/httpRequest";
 import { retry } from "./remoteProvider/retry";
 import { getInstanceMetadataEndpoint } from "./utils/getInstanceMetadataEndpoint";
 import { staticStabilityProvider } from "./utils/staticStabilityProvider";

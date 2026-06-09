@@ -13,6 +13,7 @@ import software.amazon.smithy.model.shapes.ToShapeId;
 import software.amazon.smithy.rulesengine.traits.EndpointRuleSetTrait;
 import software.amazon.smithy.typescript.codegen.CodegenUtils;
 import software.amazon.smithy.typescript.codegen.TypeScriptCodegenContext;
+import software.amazon.smithy.typescript.codegen.SmithyCoreSubmodules;
 import software.amazon.smithy.typescript.codegen.TypeScriptDependency;
 import software.amazon.smithy.typescript.codegen.endpointsV2.EndpointsV2Generator;
 import software.amazon.smithy.typescript.codegen.integration.RuntimeClientPlugin;
@@ -51,7 +52,8 @@ public final class ExampleWeatherCustomEndpointsRuntimeConfig implements TypeScr
                 .build(),
             RuntimeClientPlugin.builder()
                 .withConventions(
-                    TypeScriptDependency.MIDDLEWARE_ENDPOINTS_V2.dependency,
+                    "@smithy/core/endpoints",
+                    TypeScriptDependency.SMITHY_CORE.dependency.getVersion(),
                     "Endpoint",
                     Convention.HAS_CONFIG
                 )
@@ -80,7 +82,7 @@ public final class ExampleWeatherCustomEndpointsRuntimeConfig implements TypeScr
             .writerDelegator()
             .useFileWriter(ADD_CUSTOM_ENDPOINTS_FILE, w -> {
                 w.addTypeImport("Provider", "__Provider", TypeScriptDependency.SMITHY_TYPES);
-                w.addImport("normalizeProvider", null, TypeScriptDependency.UTIL_MIDDLEWARE);
+                w.addImportSubmodule("normalizeProvider", null, TypeScriptDependency.SMITHY_CORE, SmithyCoreSubmodules.CLIENT);
                 w.write(
                     """
                     export interface GenericCustomEndpointsInputConfig {

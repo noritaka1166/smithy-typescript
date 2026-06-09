@@ -1,7 +1,7 @@
-import type { HttpRequest } from "@smithy/types";
-import type { ClientRequest } from "node:http";
 import type { ClientHttp2Stream } from "node:http2";
+import type { ClientRequest } from "node:http";
 import { Readable } from "node:stream";
+import type { HttpRequest } from "@smithy/types";
 
 import { timing } from "./timing";
 
@@ -21,8 +21,8 @@ export async function writeRequestBody(
   maxContinueTimeoutMs = MIN_WAIT_TIME,
   externalAgent = false
 ): Promise<void> {
-  const headers = request.headers ?? {};
-  const expect = headers.Expect || headers.expect;
+  const headers = request.headers;
+  const expect = headers ? headers.Expect || headers.expect : undefined;
 
   let timeoutId = -1;
   let sendBody = true;

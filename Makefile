@@ -1,7 +1,17 @@
-.PHONY: build sync
+.PHONY: build build-packages sync api-snapshot ct cti cwt cwti
 
 build:
 	./gradlew clean build publishToMavenLocal
+
+# @smithy/undici-http-handler depends on undici@7, which requires Node.js >= 20.
+# Skip building it on older Node versions so the rest of the workspace still builds.
+build-packages:
+	@NODE_MAJOR=$$(node -p "parseInt(process.versions.node.split('.')[0], 10)"); \
+	if [ "$$NODE_MAJOR" -lt 20 ]; then \
+		yarn turbo run build --filter='!@smithy/undici-http-handler'; \
+	else \
+		yarn turbo run build; \
+	fi
 
 sync:
 	gh repo sync $$GITHUB_USERNAME/smithy-typescript -b main
@@ -21,6 +31,7 @@ generate-protocol-tests:
 	node ./scripts/post-protocol-test-codegen
 	yarn
 	yarn turbo run build -F="./private/*" --only
+	make test-protocols;
 
 test-protocols:
 	(cd ./private/smithy-rpcv2-cbor && npx vitest run --globals && yarn test:index)
@@ -34,29 +45,70 @@ benchmark:
 
 # "build generate test"
 bgt:
-	make build generate-protocol-tests test-protocols
+	make build generate-protocol-tests
 
+gt:
+	make generate-protocol-tests
+
+# @smithy/undici-http-handler depends on undici@7, which requires Node.js >= 20.
+# Skip its tests on older Node versions so the rest of the unit tests still run.
 test-unit:
-	yarn g:vitest run -c vitest.config.mts
+	@NODE_MAJOR=$$(node -p "parseInt(process.versions.node.split('.')[0], 10)"); \
+	if [ "$$NODE_MAJOR" -lt 20 ]; then \
+		yarn g:vitest run -c vitest.config.mts --exclude '**/packages/undici-http-handler/**'; \
+	else \
+		yarn g:vitest run -c vitest.config.mts; \
+	fi
 
 test-browser:
 	yarn g:vitest run -c vitest.config.browser.mts
 
 test-bundlers:
 	(cd ./testbed/bundlers && make run)
+	(cd ./testbed/bundler-compat && make run)
 
 # typecheck for test code.
 test-types:
 	npx tsc -p tsconfig.test.json
 
 test-integration:
-	node ./scripts/validation/no-generic-byte-arrays.js
-	node ./scripts/validation/api-snapshot-validation.js
-	make test-browser
-	yarn g:vitest run -c vitest.config.integ.mts
-	make test-types
+	make static-analysis;
+	make api-snapshot;
+	make test-browser;
+	node ./packages/node-http-handler/test/node-http-handler.interception.mjs
+	yarn g:vitest run -c vitest.config.integ.mts;
+	make test-types;
+	make test-bundlers;
+
+static-analysis:
+	node ./scripts/validation/generic-byte-array.js;
+	node ./scripts/check-dependencies.js;
+	node ./scripts/runtime-dep-version-check.js;
+	node ./scripts/validation/validate-all.js;
 
 turbo-clean:
 	@read -p "Are you sure you want to delete your local cache? [y/N]: " ans && [ $${ans:-N} = y ]
 	@echo "\nDeleted cache folders: \n--------"
 	@find . -name '.turbo' -type d -prune -print -exec rm -rf '{}' + && echo '\n'
+
+api-snapshot:
+	node scripts/validation/api-snapshot.js --write
+	git diff --exit-code api-snapshot/
+
+S ?= $(word 2,$(MAKECMDGOALS))
+
+# make ct retry, for example, to run a subset of core unit tests.
+ct:
+	cd packages/core && yarn g:vitest run src/submodules/$(S)
+cwt:
+	cd packages/core && yarn g:vitest watch src/submodules/$(S)
+
+# same as ct, but for integration tests.
+cti:
+	cd packages/core && yarn g:vitest run -c vitest.config.integ.mts src/submodules/$(S)
+cwti:
+	cd packages/core && yarn g:vitest watch -c vitest.config.integ.mts src/submodules/$(S)
+
+# swallow extra positional args (e.g. make ct endpoints)
+%:
+	@:

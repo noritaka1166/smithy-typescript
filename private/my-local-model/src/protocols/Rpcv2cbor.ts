@@ -8,18 +8,24 @@ import {
   parseCborBody as parseBody,
   parseCborErrorBody as parseErrorBody,
 } from "@smithy/core/cbor";
-import { nv as __nv } from "@smithy/core/serde";
-import type { HttpRequest as __HttpRequest, HttpResponse as __HttpResponse } from "@smithy/protocol-http";
 import {
   _json,
-  collectBody,
   decorateServiceException as __decorateServiceException,
-  expectNonNull as __expectNonNull,
-  expectString as __expectString,
-  parseEpochTimestamp as __parseEpochTimestamp,
   take,
   withBaseException,
-} from "@smithy/smithy-client";
+} from "@smithy/core/client";
+import {
+  type HttpRequest as __HttpRequest,
+  type HttpResponse as __HttpResponse,
+  collectBody,
+} from "@smithy/core/protocols";
+import {
+  expectInt32 as __expectInt32,
+  expectNonNull as __expectNonNull,
+  expectString as __expectString,
+  nv as __nv,
+  parseEpochTimestamp as __parseEpochTimestamp,
+} from "@smithy/core/serde";
 import type {
   Endpoint as __Endpoint,
   EventStreamSerdeContext as __EventStreamSerdeContext,
@@ -30,10 +36,13 @@ import type {
   SerdeContext as __SerdeContext,
 } from "@smithy/types";
 
-import { CamelCaseOperationCommandInput, CamelCaseOperationCommandOutput } from "../commands/CamelCaseOperationCommand";
-import { GetNumbersCommandInput, GetNumbersCommandOutput } from "../commands/GetNumbersCommand";
-import { HttpLabelCommandCommandInput, HttpLabelCommandCommandOutput } from "../commands/HttpLabelCommandCommand";
-import { TradeEventStreamCommandInput, TradeEventStreamCommandOutput } from "../commands/TradeEventStreamCommand";
+import type {
+  CamelCaseOperationCommandInput,
+  CamelCaseOperationCommandOutput,
+} from "../commands/CamelCaseOperationCommand";
+import type { GetNumbersCommandInput, GetNumbersCommandOutput } from "../commands/GetNumbersCommand";
+import type { HttpLabelCommandCommandInput, HttpLabelCommandCommandOutput } from "../commands/HttpLabelCommandCommand";
+import type { TradeEventStreamCommandInput, TradeEventStreamCommandOutput } from "../commands/TradeEventStreamCommand";
 import {
   CodedThrottlingError,
   HaltError,
@@ -43,15 +52,15 @@ import {
   XYZServiceServiceException,
 } from "../models/errors";
 import {
-  Alpha,
-  CamelCaseOperationInput,
-  CamelCaseOperationOutput,
-  DifferentShapeName,
-  GetNumbersRequest,
-  GetNumbersResponse,
-  HttpLabelCommandInput,
+  type Alpha,
+  type CamelCaseOperationInput,
+  type CamelCaseOperationOutput,
+  type DifferentShapeName,
+  type GetNumbersRequest,
+  type GetNumbersResponse,
+  type HttpLabelCommandInput,
+  type Unit,
   TradeEvents,
-  Unit,
 } from "../models/models_0";
 import { XYZServiceSyntheticServiceException as __BaseException } from "../models/XYZServiceSyntheticServiceException";
 
@@ -486,8 +495,32 @@ const se_Alpha_event = (
           'fieldWithMessage': [],
           'fieldWithoutMessage': [],
           'maxResults': [],
+          'numbers': _json,
+          'sparseNumbers': _ => se_SparseIntegerMap(_, context),
           'startToken': [],
         });
+      }
+
+      // se_IntegerMap omitted.
+
+      /**
+       * serializeRpcv2cborSparseIntegerMap
+       */
+      const se_SparseIntegerMap = (
+        input: Record<string, number | null>,
+        context: __SerdeContext
+      ): any => {
+        return Object.entries(input).reduce((acc: Record<string, any>, [key, value]: [string, any]) => {
+          if (value !== null) {
+              acc[key] = value;
+          }
+
+          else {
+              acc[key] = null as any;
+          }
+
+          return acc;
+        }, {});
       }
 
       // se_Unit omitted.
@@ -551,6 +584,7 @@ const se_Alpha_event = (
           'inexplicablyDeprecatedNumbers': _json,
           'nextToken': __expectString,
           'numbers': _json,
+          'sparseNumbers': (_: any) => de_SparseIntegerList(_, context),
         }) as any;
       }
 
@@ -563,6 +597,22 @@ const se_Alpha_event = (
       // de_MysteryThrottlingError omitted.
 
       // de_RetryableError omitted.
+
+      /**
+       * deserializeRpcv2cborSparseIntegerList
+       */
+      const de_SparseIntegerList = (
+        output: any,
+        context: __SerdeContext
+      ): (number | null)[] => {
+        const collection = (output || []).map((entry: any) => {
+          if (entry === null) {
+            return null as any;
+          }
+          return __expectInt32(entry) as any;
+        });
+        return collection;
+      }
 
       // de_XYZServiceServiceException omitted.
 

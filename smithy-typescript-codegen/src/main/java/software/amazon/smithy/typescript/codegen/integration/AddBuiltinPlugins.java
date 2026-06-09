@@ -22,11 +22,16 @@ public class AddBuiltinPlugins implements TypeScriptIntegration {
         // rely on previously resolved values.
         return List.of(
             RuntimeClientPlugin.builder()
-                .withConventions(TypeScriptDependency.MIDDLEWARE_RETRY.dependency, "Retry")
+                .withConventions(
+                    "@smithy/core/retry",
+                    TypeScriptDependency.SMITHY_CORE.dependency.getVersion(),
+                    "Retry"
+                )
                 .build(),
             RuntimeClientPlugin.builder()
                 .withConventions(
-                    TypeScriptDependency.MIDDLEWARE_CONTENT_LENGTH.dependency,
+                    "@smithy/core/protocols",
+                    TypeScriptDependency.SMITHY_CORE.dependency.getVersion(),
                     "ContentLength",
                     HAS_MIDDLEWARE
                 )
