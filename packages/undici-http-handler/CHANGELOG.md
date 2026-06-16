@@ -1,5 +1,23 @@
 # Change Log
 
+## 2.1.1
+
+### Patch Changes
+
+- 5ddf7a2: Add a "Migrating from NodeHttp2Handler" section to the undici-http-handler README that maps each NodeHttp2Handler option to its undici Dispatcher equivalent, with a before/after example.
+
+## 2.1.0
+
+### Minor Changes
+
+- 17e50e9: update dist-cjs output format to use plain require/exports statements
+
+### Patch Changes
+
+- Updated dependencies [17e50e9]
+  - @smithy/types@4.15.0
+  - @smithy/core@3.25.0
+
 ## 2.0.3
 
 ### Patch Changes
