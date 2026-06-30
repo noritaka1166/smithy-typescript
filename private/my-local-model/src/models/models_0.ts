@@ -114,6 +114,13 @@ export interface GetNumbersResponse {
 /**
  * @public
  */
+export interface HostPrefixOperationInput {
+  AccountId: string | undefined;
+}
+
+/**
+ * @public
+ */
 export interface Unit {}
 
 /**
