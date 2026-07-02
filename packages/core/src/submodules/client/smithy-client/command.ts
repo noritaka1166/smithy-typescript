@@ -1,6 +1,7 @@
 import type { HttpRequest } from "@smithy/core/transport";
 import {
   SMITHY_CONTEXT_KEY,
+  type EndpointParameterInstructions,
   type FinalizeHandlerArguments,
   type Handler,
   type HandlerExecutionContext,
@@ -21,9 +22,6 @@ import {
 
 import { constructStack } from "../middleware-stack/MiddlewareStack";
 import { schemaLogFilter } from "./schemaLogFilter";
-
-// EndpointParameterInstructions inlined to avoid circular dependency with @smithy/middleware-endpoint.
-type EndpointParameterInstructions = Record<string, unknown>;
 
 /**
  * @public
@@ -47,7 +45,7 @@ export abstract class Command<
   public static classBuilder<
     I extends SI,
     O extends SO,
-    C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+    C extends { logger?: Logger; requestHandler: RequestHandler<any, any, any> },
     SI extends object = any,
     SO extends MetadataBearer = any,
   >() {
@@ -65,7 +63,7 @@ export abstract class Command<
    */
   public resolveMiddlewareWithContext(
     clientStack: IMiddlewareStack<any, any>,
-    configuration: { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+    configuration: { logger?: Logger; requestHandler: RequestHandler<any, any, any> },
     options: any,
     {
       middlewareFn,
@@ -130,7 +128,7 @@ type ResolveMiddlewareContextArgs = {
 class ClassBuilder<
   I extends SI,
   O extends SO,
-  C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+  C extends { logger?: Logger; requestHandler: RequestHandler<any, any, any> },
   SI extends object = any,
   SO extends MetadataBearer = any,
 > {
@@ -315,7 +313,7 @@ class ClassBuilder<
 export interface CommandImpl<
   I extends SI,
   O extends SO,
-  C extends { logger: Logger; requestHandler: RequestHandler<any, any, any> },
+  C extends { logger?: Logger; requestHandler: RequestHandler<any, any, any> },
   SI extends object = any,
   SO extends MetadataBearer = any,
 > extends Command<I, O, C, SI, SO> {
