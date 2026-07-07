@@ -1,7 +1,7 @@
 import type { Readable } from "node:stream";
 import { HttpResponse, buildQueryString, type HttpHandler, type HttpRequest } from "@smithy/core/protocols";
 import type { HttpHandlerOptions, Logger } from "@smithy/types";
-import { Agent, Dispatcher } from "undici";
+import { Agent, Dispatcher, getGlobalDispatcher } from "undici";
 
 import { buildAbortError } from "./build-abort-error";
 
@@ -74,7 +74,7 @@ export class UndiciHttpHandler implements HttpHandler<UndiciHttpHandlerOptions> 
       // Caller passed Agent.Options — store them and defer Agent creation
       // until the first request, so we don't pay for an unused dispatcher
       // (e.g. when the handler is constructed but never invoked).
-      this.internalAgentOptions = { allowH2: true, ...options.dispatcher };
+      this.internalAgentOptions = { ...(options.dispatcher as Agent.Options) };
       const { dispatcher: _ignored, ...rest } = options;
       this.config = rest;
     } else {
@@ -248,7 +248,7 @@ export class UndiciHttpHandler implements HttpHandler<UndiciHttpHandlerOptions> 
         previousDispatcher.close();
       }
 
-      this.internalAgentOptions = { allowH2: true, ...(value as Agent.Options) };
+      this.internalAgentOptions = { ...(value as Agent.Options) };
       this.config.dispatcher = undefined;
       return;
     }
@@ -270,6 +270,13 @@ export class UndiciHttpHandler implements HttpHandler<UndiciHttpHandlerOptions> 
       return dispatcher;
     }
 
-    return (config.dispatcher = new Agent(this.internalAgentOptions ?? { allowH2: true }));
+    if (this.internalAgentOptions) {
+      return (config.dispatcher = new Agent(this.internalAgentOptions));
+    }
+
+    // Use the global dispatcher. This respects environment-level proxy/TLS
+    // configuration set via `setGlobalDispatcher` without creating a redundant
+    // `Agent` instance.
+    return getGlobalDispatcher();
   }
 }
