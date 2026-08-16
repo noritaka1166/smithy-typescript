@@ -1,5 +1,25 @@
 # Change Log
 
+## 4.6.2
+
+### Patch Changes
+
+- 99c3f91: Restore npm provenance attestations. No functional changes.
+- Updated dependencies [99c3f91]
+  - @smithy/core@3.33.2
+  - @smithy/types@4.17.2
+
+## 4.6.1
+
+### Patch Changes
+
+- d774f8d: chore: build packages with typescript 7. Packages continue to be compatible with TypeScript 3.4 through 7.0 in consumer applications.
+- 3530774: bump fflate to 0.8.3 to address CVE-2026-45820
+- Updated dependencies [b3958ad]
+- Updated dependencies [d774f8d]
+  - @smithy/core@3.33.1
+  - @smithy/types@4.17.1
+
 ## 4.6.0
 
 ### Minor Changes

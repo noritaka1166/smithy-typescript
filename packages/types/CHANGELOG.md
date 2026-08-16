@@ -1,5 +1,17 @@
 # Change Log
 
+## 4.17.2
+
+### Patch Changes
+
+- 99c3f91: Restore npm provenance attestations. No functional changes.
+
+## 4.17.1
+
+### Patch Changes
+
+- d774f8d: chore: build packages with typescript 7. Packages continue to be compatible with TypeScript 3.4 through 7.0 in consumer applications.
+
 ## 4.17.0
 
 ### Minor Changes

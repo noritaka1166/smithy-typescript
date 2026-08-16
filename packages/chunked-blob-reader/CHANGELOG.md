@@ -1,5 +1,22 @@
 # @smithy/chunked-blob-reader
 
+## 5.5.2
+
+### Patch Changes
+
+- 99c3f91: Restore npm provenance attestations. No functional changes.
+- Updated dependencies [99c3f91]
+  - @smithy/core@3.33.2
+
+## 5.5.1
+
+### Patch Changes
+
+- d774f8d: chore: build packages with typescript 7. Packages continue to be compatible with TypeScript 3.4 through 7.0 in consumer applications.
+- Updated dependencies [b3958ad]
+- Updated dependencies [d774f8d]
+  - @smithy/core@3.33.1
+
 ## 5.5.0
 
 ### Minor Changes
