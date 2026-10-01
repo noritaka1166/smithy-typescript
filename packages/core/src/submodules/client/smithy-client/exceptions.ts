@@ -24,6 +24,7 @@ export interface ServiceExceptionOptions extends SmithyException, MetadataBearer
  * @public
  */
 export class ServiceException extends Error implements SmithyException, MetadataBearer {
+  public static readonly shapeId: string = "smithy.ts.sdk.synthetic.nonamespace.client#ServiceException";
   readonly $fault: "client" | "server";
 
   $response?: HttpResponse;
@@ -63,28 +64,54 @@ export class ServiceException extends Error implements SmithyException, Metadata
     if (this === ServiceException) {
       return ServiceException.isInstance(instance);
     }
-    // For subclasses, check both prototype chain and name match
-    // Note: instance must be ServiceException first (having $-props)
     if (ServiceException.isInstance(instance)) {
       if (this.prototype.isPrototypeOf(instance)) {
         return true;
       }
-      const targetName = this.name;
-      if (!targetName || !candidate.name) {
+
+      const targetId: string | undefined = Object.prototype.hasOwnProperty.call(this, "shapeId")
+        ? this.shapeId
+        : undefined;
+      let candidateHasShapeId = false;
+      if (targetId) {
+        let proto = Object.getPrototypeOf(candidate);
+        while (proto && proto !== Object.prototype) {
+          const ctor = proto.constructor;
+          const candidateId: string | undefined =
+            ctor !== ServiceException && Object.prototype.hasOwnProperty.call(ctor, "shapeId")
+              ? ctor?.shapeId
+              : undefined;
+          if (candidateId) {
+            candidateHasShapeId = true;
+            if (candidateId === targetId) {
+              return true;
+            }
+          }
+          proto = Object.getPrototypeOf(proto);
+        }
+      }
+
+      // candidate stamped means do not proceed to name-comparison fallback.
+      if (targetId && candidateHasShapeId) {
         return false;
       }
-      if (candidate.name === targetName) {
-        return true;
-      }
-      let proto = Object.getPrototypeOf(candidate);
-      while (proto && proto !== Object.prototype) {
-        const ctorName = proto.constructor?.name;
-        if (ctorName && ctorName !== "Error" && ctorName === targetName) {
+
+      // This part is only for pre-schema clients that don't register error schemas.
+      // We will require that the name length is at least 6.
+      const targetName = this.name;
+      if (targetName && targetName.length >= 6) {
+        if (candidate.name === targetName) {
           return true;
         }
-        proto = Object.getPrototypeOf(proto);
+        let proto = Object.getPrototypeOf(candidate);
+        while (proto && proto !== Object.prototype) {
+          const ctorName: string | undefined = proto.constructor?.name;
+          if (ctorName && ctorName !== "Error" && ctorName === targetName) {
+            return true;
+          }
+          proto = Object.getPrototypeOf(proto);
+        }
       }
-      return false;
     }
     return false;
   }
