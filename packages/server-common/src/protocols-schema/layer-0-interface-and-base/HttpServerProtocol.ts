@@ -3,6 +3,7 @@ import type {
   ConfigurableSerdeContext,
   HttpRequest as IHttpRequest,
   HttpResponse as IHttpResponse,
+  Logger,
   SerdeFunctions,
   ShapeDeserializer,
   ShapeSerializer,
@@ -11,8 +12,8 @@ import type {
 import { HttpResponse } from "@smithy/core/protocols";
 import type { NormalizedSchema } from "@smithy/core/schema";
 import type { EventStreamSerde } from "@smithy/core/event-streams";
-import type { SmithyFrameworkException } from "../../validation/errors";
-import { isFrameworkException } from "../../validation/errors";
+import type { SchemaFrameworkException } from "../../validation/errors";
+import { isSchemaFrameworkException } from "../../validation/errors";
 import { ServiceException } from "../../validation/errors";
 import { NotAcceptableException, UnsupportedMediaTypeException } from "../../validation/errors";
 import { acceptMatches } from "../../validation/accept";
@@ -51,6 +52,14 @@ export abstract class HttpServerProtocol
 
   public abstract getShapeId(): string;
 
+  public abstract claim(request: IHttpRequest, logger?: Logger): boolean;
+
+  public abstract route(
+    request: IHttpRequest,
+    operationSchemas: Readonly<Record<string, StaticOperationSchema>>,
+    logger?: Logger
+  ): string | undefined;
+
   /**
    * @returns the content-type this protocol uses for request/response bodies.
    */
@@ -77,8 +86,8 @@ export abstract class HttpServerProtocol
     context: SerdeFunctions,
     output: Output
   ): Promise<IHttpResponse> {
-    if (isFrameworkException(output)) {
-      return this.serializeFrameworkException(output as unknown as SmithyFrameworkException);
+    if (isSchemaFrameworkException(output)) {
+      return this.serializeFrameworkException(output as unknown as SchemaFrameworkException);
     }
 
     if (output instanceof ServiceException || this.isOperationError(operationSchema, output)) {
@@ -111,7 +120,7 @@ export abstract class HttpServerProtocol
   /**
    * Serializes a framework-level exception (e.g., UnsupportedMediaTypeException).
    */
-  protected serializeFrameworkException(error: SmithyFrameworkException): IHttpResponse {
+  protected serializeFrameworkException(error: SchemaFrameworkException): IHttpResponse {
     const errorBody = {
       __type: error.name,
       message: (error as any).message ?? error.name,
